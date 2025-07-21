@@ -101,7 +101,7 @@ questioning rather than content generation.
 **US-301:** As a user, I must reflect before accessing AI help
 
 -   **AC1:** Reflection prompt appears when requesting AI
--   **AC2:** User must write 100+ word reflection
+-   **AC2:** User must write 50+ word reflection
 -   **AC3:** Reflection quality determines AI access level
 -   **AC4:** Poor reflections get guidance to improve
 -   **Points:** 5
@@ -176,21 +176,23 @@ questioning rather than content generation.
 
 ---
 
-### Sprint 1: Foundation (Week 1)
+### Sprint 1: Foundation (Week 1) - IN PROGRESS
 
 **Goal:** Basic auth and document CRUD  
-**Velocity Target:** 15 points
+**Velocity Target:** 15 points  
+**Actual Start Date:** July 20, 2025
 
 #### User Stories:
 
--   US-101: User registration/login (3 pts)
--   US-102: Document list view (2 pts)
--   US-103: Create/delete documents (2 pts)
--   US-201: Basic writing interface (5 pts)
--   US-203: Document naming (2 pts)
+-   US-101: User registration/login (3 pts) - Not Started
+-   US-102: Document list view (2 pts) - Not Started
+-   US-103: Create/delete documents (2 pts) - Not Started
+-   US-201: Basic writing interface (5 pts) - Not Started
+-   US-203: Document naming (2 pts) - Not Started
 
 #### Technical Tasks:
 
+-   ✅ Pytest infrastructure setup (TDD foundation)
 -   FastAPI backend setup with SQLAlchemy
 -   JWT authentication implementation
 -   Document model and API endpoints
@@ -199,9 +201,15 @@ questioning rather than content generation.
 
 #### Sprint Review Criteria:
 
+-   ✅ Test infrastructure operational
 -   User can register, login, and logout
 -   User can create, list, open, and delete documents
 -   Basic editor allows typing and saving
+
+**Progress Notes:**
+- Completed pytest infrastructure setup (STORY-010) to enable TDD workflow
+- All future development will follow test-first approach
+- Test coverage reporting configured
 
 ---
 
@@ -383,13 +391,6 @@ questioning rather than content generation.
 -   80% report AI helped their thinking
 -   Average reflection quality improves over time
 -   Users understand Socratic approach
-
-#### 3. Business Success
-
--   Clear value proposition validated
--   5 educator testimonials
--   Demo video with 100+ views
--   3 institutions express interest
 
 ---
 
