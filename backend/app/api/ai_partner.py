@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,8 +29,8 @@ class ReflectionResponse(BaseModel):
     quality_score: float
     ai_level: Optional[str]
     feedback: str
-    suggestions: Optional[List[str]]
-    initial_questions: Optional[List[str]]
+    suggestions: Optional[list[str]]
+    initial_questions: Optional[list[str]]
 
 
 class AIQuestion(BaseModel):
@@ -42,7 +42,7 @@ class AIQuestion(BaseModel):
 
 class AIResponse(BaseModel):
     response: str
-    follow_up_prompts: List[str]
+    follow_up_prompts: list[str]
     question_type: str
 
 
@@ -66,9 +66,13 @@ async def submit_reflection(
         raise HTTPException(status_code=404, detail="Document not found")
 
     # Analyze reflection quality
-    quality_score = await socratic_ai.assess_reflection_quality(
-        reflection_data.reflection
-    )
+    try:
+        quality_score = await socratic_ai.assess_reflection_quality(reflection_data.reflection)
+    except Exception as e:
+        print(f"Error assessing reflection quality: {str(e)}")
+        # Default to a moderate score if assessment fails
+        quality_score = 5.0
+        
     word_count = len(reflection_data.reflection.split())
 
     # Determine AI access level based on quality
@@ -122,11 +126,33 @@ async def submit_reflection(
     await db.refresh(reflection)
 
     # Generate initial Socratic questions
-    initial_questions = await socratic_ai.generate_questions(
-        context=reflection_data.reflection,
-        reflection_quality=quality_score,
-        ai_level=ai_level,
-    )
+    try:
+        initial_questions = await socratic_ai.generate_questions(
+            context=reflection_data.reflection,
+            reflection_quality=quality_score,
+            ai_level=ai_level,
+        )
+    except Exception as e:
+        print(f"Error generating questions: {str(e)}")
+        # Provide default questions based on AI level
+        if ai_level == "basic":
+            initial_questions = [
+                "What is the main point you're trying to make?",
+                "Can you tell me more about your topic?",
+                "What challenges are you facing?"
+            ]
+        elif ai_level == "standard":
+            initial_questions = [
+                "What evidence supports your argument?",
+                "How does this connect to your thesis?",
+                "What are the key points you want to explore?"
+            ]
+        else:
+            initial_questions = [
+                "What are the implications of your argument?",
+                "How might different perspectives challenge your view?",
+                "What assumptions underlie your reasoning?"
+            ]
 
     # Track analytics
     await analytics_service.track_reflection(
@@ -167,18 +193,35 @@ async def ask_ai_partner(
 
     # Generate Socratic response
     start_time = datetime.utcnow()
-    response, question_type = await socratic_ai.generate_socratic_response(
-        question=question_data.question,
-        context=question_data.context,
-        ai_level=question_data.ai_level,
-        user_id=current_user.id,
-    )
+    try:
+        response, question_type = await socratic_ai.generate_socratic_response(
+            question=question_data.question,
+            context=question_data.context,
+            ai_level=question_data.ai_level,
+            user_id=current_user.id,
+        )
+    except Exception as e:
+        # Log the error (in production, you'd use proper logging)
+        print(f"AI service error: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail="AI service is temporarily unavailable. Please try again later."
+        )
+    
     response_time_ms = int((datetime.utcnow() - start_time).total_seconds() * 1000)
 
     # Get follow-up prompts
-    follow_up_prompts = await socratic_ai.get_follow_up_prompts(
-        context=question_data.context, ai_level=question_data.ai_level
-    )
+    try:
+        follow_up_prompts = await socratic_ai.get_follow_up_prompts(
+            context=question_data.context, ai_level=question_data.ai_level
+        )
+    except Exception:
+        # If follow-up prompts fail, provide defaults based on AI level
+        follow_up_prompts = [
+            "Can you tell me more about your thoughts?",
+            "What specific aspect would you like to explore?",
+            "How does this relate to your main argument?"
+        ]
 
     # Log interaction
     ai_interaction = AIInteraction(
@@ -217,20 +260,14 @@ async def get_conversation_history(
     """Get AI conversation history for a document"""
 
     # Verify document ownership
-    result = await db.execute(
-        select(Document).where(
-            Document.id == document_id, Document.user_id == current_user.id
-        )
-    )
+    result = await db.execute(select(Document).where(Document.id == document_id, Document.user_id == current_user.id))
     document = result.scalar_one_or_none()
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
     # Get interactions
     result = await db.execute(
-        select(AIInteraction)
-        .where(AIInteraction.document_id == document_id)
-        .order_by(AIInteraction.created_at)
+        select(AIInteraction).where(AIInteraction.document_id == document_id).order_by(AIInteraction.created_at)
     )
     interactions = result.scalars().all()
 

@@ -1,17 +1,16 @@
-import pytest
-from unittest.mock import patch, AsyncMock
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from unittest.mock import AsyncMock, patch
 
-from tests.utils import (
-    create_test_user_in_db,
-    create_test_document_in_db,
-    create_thoughtful_reflection,
-    create_shallow_reflection,
-)
-from tests.factories import ReflectionFactory
+import pytest
+from httpx import AsyncClient
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.ai_interaction import Reflection
+from tests.test_utils import (
+    create_test_document_in_db,
+    create_test_user_in_db,
+)
+from tests.factories import create_thoughtful_reflection
 
 
 class TestReflectionGate:
@@ -33,9 +32,7 @@ class TestReflectionGate:
             "document_id": str(document.id),
         }
 
-        response = await authenticated_client.post(
-            "/api/ai/reflect", json=reflection_data
-        )
+        response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
         assert response.status_code == 200
         result = response.json()
@@ -68,9 +65,7 @@ class TestReflectionGate:
         ) as mock_assess:
             mock_assess.return_value = 2.5  # Low quality score
 
-            response = await authenticated_client.post(
-                "/api/ai/reflect", json=reflection_data
-            )
+            response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
         assert response.status_code == 200
         result = response.json()
@@ -114,9 +109,7 @@ class TestReflectionGate:
                 "How does this connect to your thesis?",
             ]
 
-            response = await authenticated_client.post(
-                "/api/ai/reflect", json=reflection_data
-            )
+            response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
         assert response.status_code == 200
         result = response.json()
@@ -161,9 +154,7 @@ class TestReflectionGate:
                 "How will you structure this section?",
             ]
 
-            response = await authenticated_client.post(
-                "/api/ai/reflect", json=reflection_data
-            )
+            response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
         assert response.status_code == 200
         result = response.json()
@@ -206,9 +197,7 @@ class TestReflectionGate:
                 "What theoretical framework supports your approach?",
             ]
 
-            response = await authenticated_client.post(
-                "/api/ai/reflect", json=reflection_data
-            )
+            response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
         assert response.status_code == 200
         result = response.json()
@@ -256,9 +245,7 @@ class TestReflectionGate:
                 mock_assess.return_value = quality_score
                 mock_questions.return_value = ["Q1", "Q2", "Q3"]
 
-                response = await authenticated_client.post(
-                    "/api/ai/reflect", json=reflection_data
-                )
+                response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
                 assert response.status_code == 200
                 result = response.json()
@@ -267,9 +254,7 @@ class TestReflectionGate:
                     assert result["ai_level"] == expected_level
 
     @pytest.mark.asyncio
-    async def test_word_count_calculation_accurate(
-        self, authenticated_client: AsyncClient, db_session: AsyncSession
-    ):
+    async def test_word_count_calculation_accurate(self, authenticated_client: AsyncClient, db_session: AsyncSession):
         """Test that word count is calculated accurately"""
         # Create a test document
         user_data = await authenticated_client.get("/api/auth/me")
@@ -286,7 +271,7 @@ class TestReflectionGate:
             ("Special!@#$%^&*()characters-don't.break,words", 3),
         ]
 
-        for text, expected_count in test_cases:
+        for text, _ in test_cases:
             reflection_data = {"reflection": text, "document_id": str(document.id)}
 
             with patch(
@@ -295,9 +280,7 @@ class TestReflectionGate:
             ) as mock_assess:
                 mock_assess.return_value = 1.0  # Low score
 
-                response = await authenticated_client.post(
-                    "/api/ai/reflect", json=reflection_data
-                )
+                response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
                 # All should be rejected due to low word count
                 assert response.status_code == 200
@@ -332,10 +315,8 @@ class TestReflectionGate:
             new_callable=AsyncMock,
         ):
             mock_assess.return_value = 6.5
-            
-            response = await authenticated_client.post(
-                "/api/ai/reflect", json=reflection_data
-            )
+
+            response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
         assert response.status_code == 200
 
@@ -381,13 +362,11 @@ class TestReflectionGate:
             new_callable=AsyncMock,
         ) as mock_analytics:
             mock_assess.return_value = 5.5
-            
-            response = await authenticated_client.post(
-                "/api/ai/reflect", json=reflection_data
-            )
+
+            response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
         assert response.status_code == 200
-        
+
         # Verify analytics was called with correct parameters
         mock_analytics.assert_called_once_with(
             user_id=user_id,
@@ -397,9 +376,7 @@ class TestReflectionGate:
         )
 
     @pytest.mark.asyncio
-    async def test_empty_reflection_handled(
-        self, authenticated_client: AsyncClient, db_session: AsyncSession
-    ):
+    async def test_empty_reflection_handled(self, authenticated_client: AsyncClient, db_session: AsyncSession):
         """Test that empty reflections are handled gracefully"""
         # Create a test document
         user_data = await authenticated_client.get("/api/auth/me")
@@ -408,9 +385,7 @@ class TestReflectionGate:
 
         reflection_data = {"reflection": "", "document_id": str(document.id)}
 
-        response = await authenticated_client.post(
-            "/api/ai/reflect", json=reflection_data
-        )
+        response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
         assert response.status_code == 200
         result = response.json()
@@ -418,9 +393,7 @@ class TestReflectionGate:
         assert "50 words" in result["feedback"]
 
     @pytest.mark.asyncio
-    async def test_whitespace_only_reflection(
-        self, authenticated_client: AsyncClient, db_session: AsyncSession
-    ):
+    async def test_whitespace_only_reflection(self, authenticated_client: AsyncClient, db_session: AsyncSession):
         """Test that whitespace-only reflections are handled correctly"""
         # Create a test document
         user_data = await authenticated_client.get("/api/auth/me")
@@ -440,9 +413,7 @@ class TestReflectionGate:
                 "document_id": str(document.id),
             }
 
-            response = await authenticated_client.post(
-                "/api/ai/reflect", json=reflection_data
-            )
+            response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
             assert response.status_code == 200
             result = response.json()
@@ -450,9 +421,7 @@ class TestReflectionGate:
             assert "50 words" in result["feedback"]
 
     @pytest.mark.asyncio
-    async def test_special_characters_in_reflection(
-        self, authenticated_client: AsyncClient, db_session: AsyncSession
-    ):
+    async def test_special_characters_in_reflection(self, authenticated_client: AsyncClient, db_session: AsyncSession):
         """Test that reflections with special characters are handled properly"""
         # Create a test document
         user_data = await authenticated_client.get("/api/auth/me")
@@ -487,10 +456,8 @@ class TestReflectionGate:
             new_callable=AsyncMock,
         ):
             mock_assess.return_value = 7.0
-            
-            response = await authenticated_client.post(
-                "/api/ai/reflect", json=reflection_data
-            )
+
+            response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
         assert response.status_code == 200
         result = response.json()
@@ -504,15 +471,11 @@ class TestReflectionGate:
         """Test that users can only submit reflections for their own documents"""
         # Create two users
         user_data = await authenticated_client.get("/api/auth/me")
-        user1_id = user_data.json()["id"]
-        
+        _ = user_data.json()["id"]  # Current user ID (not used directly)
+
         # Create another user and their document
-        other_user = await create_test_user_in_db(
-            db_session, email="other@example.com"
-        )
-        other_document = await create_test_document_in_db(
-            db_session, str(other_user.id)
-        )
+        other_user = await create_test_user_in_db(db_session, email="other@example.com")
+        other_document = await create_test_document_in_db(db_session, str(other_user.id))
 
         # Try to submit reflection for other user's document
         reflection_data = {
@@ -520,26 +483,20 @@ class TestReflectionGate:
             "document_id": str(other_document.id),
         }
 
-        response = await authenticated_client.post(
-            "/api/ai/reflect", json=reflection_data
-        )
+        response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
         assert response.status_code == 404
         assert "Document not found" in response.json()["detail"]
 
     @pytest.mark.asyncio
-    async def test_reflection_with_nonexistent_document(
-        self, authenticated_client: AsyncClient
-    ):
+    async def test_reflection_with_nonexistent_document(self, authenticated_client: AsyncClient):
         """Test reflection submission with non-existent document ID"""
         reflection_data = {
             "reflection": create_thoughtful_reflection(100),
             "document_id": "00000000-0000-0000-0000-000000000000",
         }
 
-        response = await authenticated_client.post(
-            "/api/ai/reflect", json=reflection_data
-        )
+        response = await authenticated_client.post("/api/ai/reflect", json=reflection_data)
 
         assert response.status_code == 404
         assert "Document not found" in response.json()["detail"]

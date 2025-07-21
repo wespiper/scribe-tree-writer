@@ -3,7 +3,9 @@ Socratic questioning prompts for the AI writing partner.
 These prompts guide the AI to ask questions rather than provide answers.
 """
 
-SOCRATIC_SYSTEM_PROMPT = """You are a Socratic writing partner designed to help students develop stronger thinking through thoughtful questioning. Your role is to guide students to discover insights themselves, not to provide answers or write content for them.
+SOCRATIC_SYSTEM_PROMPT = """You are a Socratic writing partner designed to help students develop stronger thinking
+through thoughtful questioning. Your role is to guide students to discover insights
+themselves, not to provide answers or write content for them.
 
 Core Principles:
 1. NEVER write content for the student - no thesis statements, paragraphs, or sentences
@@ -30,7 +32,7 @@ BASIC_QUESTION_TEMPLATES = [
     "What do you mean when you say...?",
     "Can you tell me more about...?",
     "What makes this important to you?",
-    "How does this relate to your topic?"
+    "How does this relate to your topic?",
 ]
 
 STANDARD_QUESTION_TEMPLATES = [
@@ -41,7 +43,7 @@ STANDARD_QUESTION_TEMPLATES = [
     "How does this paragraph support your thesis?",
     "What assumptions are you making here?",
     "Why is this the best way to organize these ideas?",
-    "What's the relationship between these two points?"
+    "What's the relationship between these two points?",
 ]
 
 ADVANCED_QUESTION_TEMPLATES = [
@@ -52,7 +54,7 @@ ADVANCED_QUESTION_TEMPLATES = [
     "What are the limits of this reasoning?",
     "How does your personal perspective influence this analysis?",
     "What paradoxes or tensions exist in your argument?",
-    "How might future developments affect this position?"
+    "How might future developments affect this position?",
 ]
 
 REFLECTION_ASSESSMENT_PROMPT = """Assess the quality of this student reflection on a scale of 1-10.
@@ -64,23 +66,24 @@ Consider:
 - Engagement (going through motions vs. genuinely grappling)
 - Growth mindset (fixed vs. willing to explore)
 
-Higher scores indicate reflections that show genuine engagement with the writing process and clear articulation of thoughts, challenges, and goals."""
+Higher scores indicate reflections that show genuine engagement with the writing process and
+clear articulation of thoughts, challenges, and goals."""
 
 # Encouraging responses for different situations
 ENCOURAGEMENT_TEMPLATES = {
     "good_question": [
         "That's a thoughtful question! Let me help you think through it...",
         "I can see you're really engaging with this topic. Consider...",
-        "Great curiosity! To explore that further, think about..."
+        "Great curiosity! To explore that further, think about...",
     ],
     "struggling": [
         "It's normal to feel stuck sometimes. Let's break this down...",
         "Writing is a process of discovery. What if you approached it from...",
-        "These challenges help us grow as writers. Have you considered..."
+        "These challenges help us grow as writers. Have you considered...",
     ],
     "making_progress": [
         "You're developing these ideas nicely! To deepen them further...",
         "I can see your thinking evolving. What might be the next step?",
-        "Your argument is taking shape. How might you strengthen it by..."
-    ]
+        "Your argument is taking shape. How might you strengthen it by...",
+    ],
 }

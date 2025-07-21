@@ -1,27 +1,16 @@
-from typing import List, Optional, Tuple
-
 import anthropic
 import openai
 
 from app.core.config import settings
-from app.prompts.educational_philosophy import (
-    COGNITIVE_LOAD_ADAPTATIONS,
-    PROCESS_PROMPTS,
-    validate_ai_response,
-)
 from app.prompts.reflection_patterns import (
     calculate_reflection_dimensions,
-    get_reflection_feedback,
 )
 from app.prompts.socratic_prompts import (
     ADVANCED_QUESTION_TEMPLATES,
     BASIC_QUESTION_TEMPLATES,
-    ENCOURAGEMENT_TEMPLATES,
-    REFLECTION_ASSESSMENT_PROMPT,
     SOCRATIC_SYSTEM_PROMPT,
     STANDARD_QUESTION_TEMPLATES,
 )
-from app.prompts.stage_specific_prompts import get_stage_questions
 
 
 class SocraticAI:
@@ -29,9 +18,7 @@ class SocraticAI:
 
     def __init__(self):
         self.openai_client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-        self.anthropic_client = anthropic.AsyncAnthropic(
-            api_key=settings.ANTHROPIC_API_KEY
-        )
+        self.anthropic_client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
     async def assess_reflection_quality(self, reflection: str) -> float:
         """Assess the quality of a student's reflection (1-10 scale)"""
@@ -59,9 +46,7 @@ class SocraticAI:
 
         return min(normalized_score, 10.0)
 
-    async def generate_questions(
-        self, context: str, reflection_quality: float, ai_level: str
-    ) -> List[str]:
+    async def generate_questions(self, context: str, reflection_quality: float, ai_level: str) -> list[str]:
         """Generate Socratic questions based on context and AI level"""
 
         # Select appropriate question templates
@@ -74,12 +59,12 @@ class SocraticAI:
 
         prompt = f"""
         Based on this student reflection about their writing:
-        
+
         "{context}"
-        
+
         Generate 3 Socratic questions that will help them think deeper about their topic.
         Use these types of questions as inspiration: {templates}
-        
+
         Remember:
         - Ask questions that prompt thinking, not questions that can be answered with facts
         - Focus on their reasoning, assumptions, and approach
@@ -99,15 +84,13 @@ class SocraticAI:
 
         # Parse questions from response
         questions_text = response.choices[0].message.content
-        questions = [
-            q.strip() for q in questions_text.split("\n") if q.strip() and "?" in q
-        ]
+        questions = [q.strip() for q in questions_text.split("\n") if q.strip() and "?" in q]
 
         return questions[:3]  # Return top 3 questions
 
     async def generate_socratic_response(
         self, question: str, context: str, ai_level: str, user_id: str
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         """Generate a Socratic response to student's question"""
 
         # Determine question type based on AI level
@@ -124,11 +107,11 @@ class SocraticAI:
         prompt = f"""
         The student is working on this writing:
         "{context}"
-        
+
         They asked: "{question}"
-        
+
         {instruction}
-        
+
         Respond with 1-2 thoughtful questions that guide them to find their own answer.
         Do not provide direct answers or write any content for them.
         End with an encouraging note about their thinking process.
@@ -146,7 +129,7 @@ class SocraticAI:
 
         return response.choices[0].message.content, question_type
 
-    async def get_follow_up_prompts(self, context: str, ai_level: str) -> List[str]:
+    async def get_follow_up_prompts(self, context: str, ai_level: str) -> list[str]:
         """Generate follow-up prompts to keep the conversation going"""
 
         if ai_level == "basic":

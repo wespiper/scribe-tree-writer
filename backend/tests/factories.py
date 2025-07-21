@@ -1,17 +1,13 @@
-import factory
-from factory import Faker, LazyAttribute
-from datetime import datetime
 import uuid
+from datetime import datetime
 
-from app.models.user import User
-from app.models.document import Document
-from app.models.ai_interaction import Reflection, AIInteraction
+import factory
 
 
 class UserFactory(factory.Factory):
     class Meta:
         model = dict  # We'll create dicts for use in tests
-    
+
     id = factory.LazyFunction(lambda: str(uuid.uuid4()))
     email = factory.Faker("email")
     full_name = factory.Faker("name")
@@ -24,7 +20,7 @@ class UserFactory(factory.Factory):
 class DocumentFactory(factory.Factory):
     class Meta:
         model = dict
-    
+
     id = factory.LazyFunction(lambda: str(uuid.uuid4()))
     user_id = factory.LazyAttribute(lambda obj: str(uuid.uuid4()))
     title = factory.Faker("sentence", nb_words=4)
@@ -38,7 +34,7 @@ class DocumentFactory(factory.Factory):
 class ReflectionFactory(factory.Factory):
     class Meta:
         model = dict
-    
+
     id = factory.LazyFunction(lambda: str(uuid.uuid4()))
     user_id = factory.LazyAttribute(lambda obj: str(uuid.uuid4()))
     document_id = factory.LazyAttribute(lambda obj: str(uuid.uuid4()))
@@ -53,7 +49,7 @@ class ReflectionFactory(factory.Factory):
 class AIInteractionFactory(factory.Factory):
     class Meta:
         model = dict
-    
+
     id = factory.LazyFunction(lambda: str(uuid.uuid4()))
     user_id = factory.LazyAttribute(lambda obj: str(uuid.uuid4()))
     document_id = factory.LazyAttribute(lambda obj: str(uuid.uuid4()))
@@ -67,7 +63,7 @@ class AIInteractionFactory(factory.Factory):
 def create_thoughtful_reflection(word_count: int = 100) -> str:
     """Create a reflection that should pass quality checks"""
     faker = factory.Faker._get_faker()
-    
+
     base_text = f"""
 I'm working on understanding the complexities of {faker.word()}.
 The main challenge I'm facing is how to structure my argument effectively.
@@ -76,15 +72,15 @@ I've been considering multiple perspectives, particularly the way that
 how this connects to the broader themes of {faker.word()} and {faker.word()}.
 I'm also reflecting on my writing process itself, noticing that I tend to
     """.strip()
-    
+
     # Calculate remaining words needed
     base_word_count = len(base_text.split())
     remaining_words = max(0, word_count - base_word_count)
-    
+
     if remaining_words > 0:
         additional_text = " ".join(faker.words(remaining_words))
         return f"{base_text} {additional_text}"
-    
+
     return base_text
 
 

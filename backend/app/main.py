@@ -1,10 +1,11 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api import ai_partner, auth, documents
 from app.core.config import settings
-from app.core.database import engine, Base
-from app.api import auth, documents, ai_partner
+from app.core.database import Base, engine
 
 
 @asynccontextmanager
@@ -21,7 +22,7 @@ app = FastAPI(
     title=settings.APP_NAME,
     version="0.1.0",
     description="AI writing partner that enhances thinking through Socratic questioning",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Configure CORS
@@ -41,11 +42,7 @@ app.include_router(ai_partner.router, prefix="/api/ai", tags=["ai"])
 
 @app.get("/")
 async def root():
-    return {
-        "message": "Welcome to Scribe Tree Writer API",
-        "version": "0.1.0",
-        "docs": "/docs"
-    }
+    return {"message": "Welcome to Scribe Tree Writer API", "version": "0.1.0", "docs": "/docs"}
 
 
 @app.get("/health")

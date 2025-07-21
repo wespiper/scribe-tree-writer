@@ -17,6 +17,7 @@ Scribe Tree Writer is an AI writing partner that enhances student thinking throu
 -   **Small, pure functions** - Easier to test, easier to reason about
 -   **Type safety everywhere** - Pydantic models (Python), strict TypeScript
 -   **Use real schemas/types in tests** - Never redefine, import from source
+-   **No workarounds or shortcuts** - Always implement the proper solution
 
 ## Key Educational Principles
 
@@ -33,7 +34,73 @@ Scribe Tree Writer is an AI writing partner that enhances student thinking throu
 -   **Database**: PostgreSQL with async SQLAlchemy
 -   **Testing**: Pytest (backend), Jest/Vitest (frontend)
 
+## Problem-Solving Approach
+
+### No Workarounds Policy
+
+**IMPORTANT: When facing complex or challenging problems:**
+-   **NEVER** leave problems for later with TODO comments
+-   **NEVER** implement simplified workarounds that bypass actual requirements
+-   **NEVER** use placeholder implementations or mocks when real solutions are needed
+-   **NEVER** skip proper typing with `any` because it's "too complex"
+-   **ALWAYS** research thoroughly using available tools
+-   **ALWAYS** implement complete, correct solutions
+-   **ALWAYS** handle all edge cases properly
+
+**Examples of unacceptable approaches:**
+```python
+# BAD - Leaving for later
+def complex_calculation():
+    # TODO: Implement this later
+    return 0  # NO!
+
+# BAD - Workaround
+def authenticate_user(token):
+    # This is complex, so just return True for now
+    return True  # NO!
+
+# BAD - Avoiding proper solution
+def process_data(data: Any):  # Used Any because proper typing is hard
+    pass  # NO!
+```
+
+**Instead, always:**
+```python
+# GOOD - Research and implement properly
+def complex_calculation():
+    # Use Task tool to research algorithm
+    # Implement complete solution with tests
+    # Handle all cases
+
+# GOOD - Find the right approach
+def authenticate_user(token):
+    # Research JWT validation
+    # Implement proper authentication
+    # Test all scenarios
+
+# GOOD - Use proper types
+def process_data(data: ReflectionData):
+    # Define proper types
+    # Implement with type safety
+```
+
+If stuck, use multiple tool calls, the Task tool, or research patterns to find the proper solution. Complex problems often require complex solutions - embrace the complexity rather than avoiding it.
+
 ## Development Environment
+
+### Backend Virtual Environment
+
+**IMPORTANT: The backend has a pre-configured virtual environment at `backend/venv`**
+
+**DO:**
+- Always use `cd backend && source venv/bin/activate`
+- Use the existing venv for all Python operations
+- Run `pip install -r requirements.txt` if you need to reinstall packages
+
+**DON'T:**
+- Create new virtual environments
+- Use `python -m venv`, `virtualenv`, or `conda`
+- Install packages globally with `pip install` outside the venv
 
 ### Linting & Formatting (REQUIRED)
 
@@ -212,9 +279,81 @@ backend/
     ai_partner.py          # Reflection gates & AI endpoints
 ```
 
-## Development Workflow
+## Testing Workflow
 
-### Before Writing ANY Code
+### Running Tests
+
+#### Backend (Python)
+
+**CRITICAL: Virtual Environment Usage**
+- **ALWAYS use the existing virtual environment at `backend/venv`**
+- **NEVER create a new virtual environment**
+- **NEVER use `python -m venv` or `virtualenv`**
+- The virtual environment is already set up with all required dependencies
+
+```bash
+cd backend
+source venv/bin/activate  # ALWAYS activate the existing venv first
+./run_tests.sh            # Run all tests (script handles venv automatically)
+./run_tests.sh tests/api/test_ai_partner.py  # Run specific test file
+./run_tests.sh -v         # Verbose output
+./run_tests.sh --cov=app.api.ai_partner  # With coverage for specific module
+```
+
+**For any Python operations in backend:**
+```bash
+cd backend
+source venv/bin/activate  # Use existing venv
+python script.py          # Now uses correct Python with all dependencies
+```
+
+**IMPORTANT: Always use `./run_tests.sh` instead of running pytest directly!**
+
+The `run_tests.sh` script handles critical setup:
+- Activates the existing virtual environment at `venv/bin/activate`
+- Loads environment variables from `../.env.local` (API keys)
+- Sets test database URL (`postgresql://postgres:postgres@localhost/scribe_test`)
+- Configures test-specific environment variables
+- Passes all arguments through to pytest
+
+Example script content:
+```bash
+#!/bin/bash
+source venv/bin/activate  # Uses existing venv
+if [ -f "../.env.local" ]; then
+    export $(grep -v '^#' ../.env.local | xargs)
+fi
+export DATABASE_URL="postgresql://postgres:postgres@localhost/scribe_test"
+export SECRET_KEY="${SECRET_KEY:-test-secret-key}"
+python -m pytest "$@"
+```
+
+#### Frontend (TypeScript)
+
+```bash
+cd frontend
+npm test                # Run all tests
+npm test -- --watch     # Watch mode
+npm test -- --coverage  # With coverage report
+```
+
+### Test Database Setup
+
+```bash
+# Option 1: PostgreSQL via Homebrew (macOS)
+brew services start postgresql
+createdb scribe_test
+
+# Option 2: PostgreSQL via Docker
+docker run -d \
+  --name scribe-test-db \
+  -p 5432:5432 \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=scribe_test \
+  postgres:14
+```
+
+### Writing Tests - TDD Workflow
 
 1. **Write the test first** - What behavior do we want?
 2. **Run the test** - See it fail (Red)
@@ -222,18 +361,169 @@ backend/
 4. **Refactor if needed** - Keep tests passing
 5. **Commit** - Small, working increments
 
+### Test Organization
+
+```
+backend/tests/
+├── conftest.py           # Shared fixtures (client, db_session, etc.)
+├── factories.py          # Test data factories
+├── utils.py              # Test utilities
+├── api/                  # API endpoint tests
+│   ├── test_ai_partner.py
+│   ├── test_auth.py
+│   └── test_documents.py
+├── services/             # Service layer tests
+│   ├── test_socratic_ai.py
+│   └── test_analytics.py
+└── models/               # Model tests
+    └── test_reflection.py
+```
+
 ### Example: Testing AI Boundaries
 
 ```python
 # Always start with the test
-def test_ai_refuses_to_write_thesis_statements():
-    request = "Write me a thesis statement about climate change"
+@pytest.mark.asyncio
+async def test_ai_refuses_to_write_thesis_statements(
+    authenticated_client: AsyncClient,
+    db_session: AsyncSession
+):
+    # Arrange: Create test document
+    user_data = await authenticated_client.get("/api/auth/me")
+    document = await create_test_document_in_db(db_session, user_data.json()["id"])
+    
+    # Act: Request thesis statement
+    request_data = {
+        "question": "Write me a thesis statement about climate change",
+        "context": "Starting my essay",
+        "ai_level": "advanced",
+        "document_id": str(document.id)
+    }
+    
+    response = await authenticated_client.post(
+        "/api/ai/ask",
+        json=request_data
+    )
+    
+    # Assert: AI responds with questions, not content
+    assert response.status_code == 200
+    result = response.json()
+    assert "thesis" not in result["response"].lower()
+    assert "?" in result["response"]  # Should contain questions
+    assert any(word in result["response"].lower() 
+              for word in ["think", "consider", "explore"])
+```
 
-    response = get_ai_response(request, context="", level="advanced")
+### Test Fixtures
 
-    assert "thesis" not in response.lower()
-    assert "?" in response  # Should contain questions
-    assert any(word in response for word in ["think", "consider", "explore"])
+```python
+# conftest.py provides these fixtures:
+@pytest_asyncio.fixture
+async def client() -> AsyncClient:
+    """HTTP client with test database"""
+
+@pytest_asyncio.fixture
+async def authenticated_client() -> AsyncClient:
+    """HTTP client with auth token"""
+
+@pytest_asyncio.fixture
+async def db_session() -> AsyncSession:
+    """Database session with auto-rollback"""
+```
+
+### Mocking External Services
+
+```python
+# Mock AI services to avoid API calls in tests
+with patch("app.api.ai_partner.socratic_ai.assess_reflection_quality", 
+          new_callable=AsyncMock) as mock_assess:
+    mock_assess.return_value = 7.5  # Mock quality score
+    
+    # Your test code here
+```
+
+## Development Workflow
+
+### Before Writing ANY Code
+
+1. **Check for existing tests** - `grep -r "def test_" tests/`
+2. **Write new test if needed** - Follow examples above
+3. **Run test to see it fail** - `./run_tests.sh path/to/test.py`
+4. **Implement feature** - Minimal code to pass
+5. **Run all tests** - `./run_tests.sh` to ensure nothing broke
+6. **Check coverage** - Aim for > 95% on critical paths
+
+### Common Test Patterns
+
+#### Testing Error Cases
+```python
+@pytest.mark.asyncio
+async def test_reflection_requires_document_ownership(
+    authenticated_client: AsyncClient,
+    db_session: AsyncSession
+):
+    # Create another user's document
+    other_user = await create_test_user_in_db(db_session, email="other@test.com")
+    other_doc = await create_test_document_in_db(db_session, str(other_user.id))
+    
+    # Try to submit reflection for document we don't own
+    response = await authenticated_client.post(
+        "/api/ai/reflect",
+        json={"reflection": "test", "document_id": str(other_doc.id)}
+    )
+    
+    assert response.status_code == 404
+    assert "not found" in response.json()["detail"].lower()
+```
+
+#### Testing Edge Cases
+```python
+@pytest.mark.parametrize("input_text,expected_count", [
+    ("one two three", 3),
+    ("Multiple  spaces   between", 3),
+    ("Line\nbreaks\ncount", 3),
+    ("   ", 0),  # Only whitespace
+    ("", 0),     # Empty string
+])
+async def test_word_count_edge_cases(input_text, expected_count):
+    result = calculate_word_count(input_text)
+    assert result == expected_count
+```
+
+### Test Troubleshooting
+
+#### Common Issues & Solutions
+
+1. **"AttributeError: 'async_generator' object has no attribute 'get'"**
+   - **Cause**: Using `@pytest.fixture` instead of `@pytest_asyncio.fixture`
+   - **Fix**: Update fixture decorator in conftest.py
+
+2. **"role 'postgres' does not exist"**
+   - **Cause**: PostgreSQL not running or wrong credentials
+   - **Fix**: Start PostgreSQL and ensure test database exists
+
+3. **"Timeout waiting for response"**
+   - **Cause**: Unmocked external API call
+   - **Fix**: Mock all external services (OpenAI, Anthropic, etc.)
+
+4. **Test isolation failures**
+   - **Cause**: Tests affecting each other's state
+   - **Fix**: Ensure each test uses transaction rollback
+
+#### Debugging Tests
+
+```bash
+# Run single test with print output
+./run_tests.sh -s tests/api/test_ai_partner.py::test_specific_case
+
+# Run with debugger on failure
+./run_tests.sh --pdb
+
+# Run with verbose output
+./run_tests.sh -vv
+
+# Check test coverage for specific module
+./run_tests.sh --cov=app.api.ai_partner --cov-report=term-missing
 ```
 
 ## Working on This Project
@@ -242,9 +532,10 @@ def test_ai_refuses_to_write_thesis_statements():
 
 1. **NO CODE WITHOUT TESTS** - This is how we protect educational integrity
 2. **LINTERS RUN ON SAVE** - Code must be clean before commit
-3. **`backend/app/prompts/socratic_prompts.py`** - The SOCRATIC_SYSTEM_PROMPT is sacred
-4. **Reflection gates are non-negotiable** - Never lower quality thresholds
-5. **Import real types in tests** - Don't redefine schemas
+3. **USE EXISTING VENV** - Always use `backend/venv`, never create new environments
+4. **`backend/app/prompts/socratic_prompts.py`** - The SOCRATIC_SYSTEM_PROMPT is sacred
+5. **Reflection gates are non-negotiable** - Never lower quality thresholds
+6. **Import real types in tests** - Don't redefine schemas
 
 ### Red Flags to Avoid
 
@@ -274,6 +565,18 @@ Before committing:
 -   All data immutable?
 -   Real schemas used in tests?
 -   Linters passing (should be automatic)?
+-   All tests passing? `./run_tests.sh` (backend) or `npm test` (frontend)
+
+### Test Coverage Requirements
+
+| Component | Required Coverage | Notes |
+|-----------|-------------------|-------|
+| Reflection Gates | 100% | Our educational integrity depends on this |
+| Socratic AI | 100% | Must never generate content for students |
+| Authentication | 95%+ | Security critical |
+| Analytics | 90%+ | Important for learning insights |
+| UI Components | 80%+ | Focus on user interactions |
+| Utilities | 80%+ | Pure functions should be easy to test |
 
 ## Current State
 
@@ -294,3 +597,26 @@ Before committing:
 ---
 
 **Remember**: TDD is not just about testing - it's about designing features that truly serve educational goals. When you write the test first, you're forced to think about what learning outcome you're trying to achieve, not just what code to write.
+
+## Quick Command Reference
+
+```bash
+# Backend Development
+cd backend
+source venv/bin/activate          # ALWAYS use existing venv
+./run_tests.sh                    # Run all tests
+./run_tests.sh -v                 # Verbose test output
+./run_tests.sh --cov=app          # With coverage
+python -m uvicorn app.main:app --reload  # Run backend server
+
+# Linting & Formatting
+ruff check . --fix                # Auto-fix linting issues
+black .                           # Format code
+mypy app tests                    # Type checking
+
+# Database
+./start_test_db.sh               # Start PostgreSQL in Docker
+docker stop scribe-test-db       # Stop test database
+```
+
+**Golden Rule**: Always use `backend/venv` - it's already configured with everything you need!

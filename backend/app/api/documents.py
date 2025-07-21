@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc, and_
-from typing import List, Optional
 from datetime import datetime
+from typing import Optional
 
-from app.core.database import get_db
-from app.models.user import User
-from app.models.document import Document, DocumentVersion
-from app.api.auth import get_current_user
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+from sqlalchemy import and_, desc, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.auth import get_current_user
+from app.core.database import get_db
+from app.models.document import Document, DocumentVersion
+from app.models.user import User
 
 router = APIRouter()
 
@@ -39,96 +40,74 @@ class DocumentListResponse(BaseModel):
     updated_at: datetime
 
 
-@router.get("/", response_model=List[DocumentListResponse])
-async def list_documents(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
+@router.get("/", response_model=list[DocumentListResponse])
+async def list_documents(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Document)
-        .where(and_(Document.user_id == current_user.id, Document.is_deleted == False))
+        .where(and_(Document.user_id == current_user.id, Document.is_deleted.is_(False)))
         .order_by(desc(Document.updated_at))
     )
     documents = result.scalars().all()
-    
+
     return [
-        DocumentListResponse(
-            id=doc.id,
-            title=doc.title,
-            word_count=doc.word_count,
-            updated_at=doc.updated_at
-        )
+        DocumentListResponse(id=doc.id, title=doc.title, word_count=doc.word_count, updated_at=doc.updated_at)
         for doc in documents
     ]
 
 
 @router.post("/", response_model=DocumentResponse)
 async def create_document(
-    document_data: DocumentCreate,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    document_data: DocumentCreate, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     # Create document
     document = Document(
         user_id=current_user.id,
         title=document_data.title,
         content=document_data.content,
-        word_count=len(document_data.content.split())
+        word_count=len(document_data.content.split()),
     )
     db.add(document)
     await db.commit()
     await db.refresh(document)
-    
+
     # Create initial version
     version = DocumentVersion(
-        document_id=document.id,
-        version_number=1,
-        content=document.content,
-        word_count=document.word_count
+        document_id=document.id, version_number=1, content=document.content, word_count=document.word_count
     )
     db.add(version)
     await db.commit()
-    
+
     return DocumentResponse(
         id=document.id,
         title=document.title,
         content=document.content,
         word_count=document.word_count,
         created_at=document.created_at,
-        updated_at=document.updated_at
+        updated_at=document.updated_at,
     )
 
 
 @router.get("/{document_id}", response_model=DocumentResponse)
 async def get_document(
-    document_id: str,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    document_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(
         select(Document).where(
-            and_(
-                Document.id == document_id,
-                Document.user_id == current_user.id,
-                Document.is_deleted == False
-            )
+            and_(Document.id == document_id, Document.user_id == current_user.id, Document.is_deleted.is_(False))
         )
     )
     document = result.scalar_one_or_none()
-    
+
     if not document:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Document not found"
-        )
-    
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+
     return DocumentResponse(
         id=document.id,
         title=document.title,
         content=document.content,
         word_count=document.word_count,
         created_at=document.created_at,
-        updated_at=document.updated_at
+        updated_at=document.updated_at,
     )
 
 
@@ -137,34 +116,27 @@ async def update_document(
     document_id: str,
     document_update: DocumentUpdate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     # Get document
     result = await db.execute(
         select(Document).where(
-            and_(
-                Document.id == document_id,
-                Document.user_id == current_user.id,
-                Document.is_deleted == False
-            )
+            and_(Document.id == document_id, Document.user_id == current_user.id, Document.is_deleted.is_(False))
         )
     )
     document = result.scalar_one_or_none()
-    
+
     if not document:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Document not found"
-        )
-    
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+
     # Update fields
     if document_update.title is not None:
         document.title = document_update.title
-    
+
     if document_update.content is not None:
         document.content = document_update.content
         document.word_count = len(document_update.content.split())
-        
+
         # Create new version
         result = await db.execute(
             select(DocumentVersion)
@@ -173,54 +145,45 @@ async def update_document(
             .limit(1)
         )
         last_version = result.scalar_one_or_none()
-        
+
         new_version = DocumentVersion(
             document_id=document.id,
             version_number=(last_version.version_number + 1) if last_version else 1,
             content=document.content,
-            word_count=document.word_count
+            word_count=document.word_count,
         )
         db.add(new_version)
-    
+
     document.updated_at = datetime.utcnow()
     await db.commit()
     await db.refresh(document)
-    
+
     return DocumentResponse(
         id=document.id,
         title=document.title,
         content=document.content,
         word_count=document.word_count,
         created_at=document.created_at,
-        updated_at=document.updated_at
+        updated_at=document.updated_at,
     )
 
 
 @router.delete("/{document_id}")
 async def delete_document(
-    document_id: str,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    document_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(
         select(Document).where(
-            and_(
-                Document.id == document_id,
-                Document.user_id == current_user.id,
-                Document.is_deleted == False
-            )
+            and_(Document.id == document_id, Document.user_id == current_user.id, Document.is_deleted.is_(False))
         )
     )
     document = result.scalar_one_or_none()
-    
+
     if not document:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Document not found"
-        )
-    
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+
     # Soft delete
     document.is_deleted = True
     await db.commit()
-    
+
     return {"message": "Document deleted successfully"}
