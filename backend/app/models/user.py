@@ -1,10 +1,15 @@
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Column, DateTime, String
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.sql import func
 
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.ai_interaction import AIInteraction, Reflection
+    from app.models.document import Document
 
 
 class User(Base):
@@ -19,6 +24,12 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
-    documents = relationship("Document", back_populates="user", cascade="all, delete-orphan")
-    reflections = relationship("Reflection", back_populates="user", cascade="all, delete-orphan")
-    ai_interactions = relationship("AIInteraction", back_populates="user", cascade="all, delete-orphan")
+    documents: Mapped[list["Document"]] = relationship(
+        "Document", back_populates="user", cascade="all, delete-orphan"
+    )
+    reflections: Mapped[list["Reflection"]] = relationship(
+        "Reflection", back_populates="user", cascade="all, delete-orphan"
+    )
+    ai_interactions: Mapped[list["AIInteraction"]] = relationship(
+        "AIInteraction", back_populates="user", cascade="all, delete-orphan"
+    )

@@ -40,9 +40,15 @@ class ReflectionFactory(factory.Factory):
     document_id = factory.LazyAttribute(lambda obj: str(uuid.uuid4()))
     content = factory.Faker("text", max_nb_chars=300)
     word_count = factory.LazyAttribute(lambda obj: len(obj.content.split()))
-    quality_score = factory.Faker("pyfloat", min_value=1.0, max_value=10.0, right_digits=2)
-    quality_level = factory.Faker("random_element", elements=["shallow", "basic", "standard", "advanced"])
-    ai_level_granted = factory.Faker("random_element", elements=["basic", "standard", "advanced"])
+    quality_score = factory.Faker(
+        "pyfloat", min_value=1.0, max_value=10.0, right_digits=2
+    )
+    quality_level = factory.Faker(
+        "random_element", elements=["shallow", "basic", "standard", "advanced"]
+    )
+    ai_level_granted = factory.Faker(
+        "random_element", elements=["basic", "standard", "advanced"]
+    )
     created_at = factory.LazyFunction(datetime.utcnow)
 
 
@@ -56,7 +62,9 @@ class AIInteractionFactory(factory.Factory):
     reflection_id = factory.LazyAttribute(lambda obj: str(uuid.uuid4()))
     user_message = factory.Faker("text", max_nb_chars=200)
     ai_response = factory.Faker("text", max_nb_chars=500)
-    ai_level = factory.Faker("random_element", elements=["basic", "standard", "advanced"])
+    ai_level = factory.Faker(
+        "random_element", elements=["basic", "standard", "advanced"]
+    )
     created_at = factory.LazyFunction(datetime.utcnow)
 
 

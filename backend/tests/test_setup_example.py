@@ -16,7 +16,11 @@ async def test_health_check(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_user_creation_flow(client: AsyncClient):
     """Test complete user registration flow"""
-    user_data = {"email": "newuser@example.com", "password": "securepass123", "full_name": "New User"}
+    user_data = {
+        "email": "newuser@example.com",
+        "password": "securepass123",
+        "full_name": "New User",
+    }
 
     # Register user
     response = await client.post("/api/auth/register", json=user_data)
@@ -38,13 +42,20 @@ async def test_user_creation_flow(client: AsyncClient):
 async def test_login_flow(client: AsyncClient):
     """Test user login and token generation"""
     # First create a user
-    user_data = {"email": "logintest@example.com", "password": "testpass123", "full_name": "Login Test User"}
+    user_data = {
+        "email": "logintest@example.com",
+        "password": "testpass123",
+        "full_name": "Login Test User",
+    }
 
     response = await client.post("/api/auth/register", json=user_data)
     assert response.status_code == 200
 
     # Now test login
-    login_data = {"username": user_data["email"], "password": user_data["password"]}  # OAuth2 expects 'username' field
+    login_data = {
+        "username": user_data["email"],
+        "password": user_data["password"],
+    }  # OAuth2 expects 'username' field
 
     response = await client.post("/api/auth/login", data=login_data)
     assert response.status_code == 200
@@ -71,7 +82,10 @@ async def test_authenticated_client_fixture(authenticated_client: AsyncClient):
 @pytest.mark.asyncio
 async def test_document_creation(authenticated_client: AsyncClient):
     """Test document creation via API"""
-    document_data = {"title": "My Test Document", "content": "This is the content of my test document."}
+    document_data = {
+        "title": "My Test Document",
+        "content": "This is the content of my test document.",
+    }
 
     response = await authenticated_client.post("/api/documents/", json=document_data)
     assert response.status_code == 200
@@ -113,12 +127,16 @@ async def test_database_isolation(db_session: AsyncSession, client: AsyncClient)
     from app.models.user import User
 
     # Create a user in this test
-    test_user = User(email="isolation@test.com", hashed_password="hashed", full_name="Isolation Test")
+    test_user = User(
+        email="isolation@test.com", hashed_password="hashed", full_name="Isolation Test"
+    )
     db_session.add(test_user)
     await db_session.commit()
 
     # Query to verify it exists in this session
-    result = await db_session.execute(select(User).filter_by(email="isolation@test.com"))
+    result = await db_session.execute(
+        select(User).filter_by(email="isolation@test.com")
+    )
     user = result.scalar_one_or_none()
     assert user is not None
 

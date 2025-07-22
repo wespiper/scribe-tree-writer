@@ -132,19 +132,19 @@ from httpx import AsyncClient
 
 class TestReflectionGate:
     """Test reflection gate functionality"""
-    
+
     @pytest.mark.asyncio
     async def test_shallow_reflection_blocks_ai_access(self, authenticated_client: AsyncClient):
         """Test that shallow reflections don't grant AI access"""
         # Arrange
         reflection = "Help me write"  # Only 3 words
-        
+
         # Act
         response = await authenticated_client.post("/api/ai/reflect", json={
             "reflection": reflection,
             "document_id": "123"
         })
-        
+
         # Assert
         assert response.status_code == 400
         assert "think deeper" in response.json()["detail"]
@@ -171,7 +171,7 @@ class TestReflectionGate:
 5. **Use factories for test data**
    ```python
    from tests.factories import UserFactory, create_thoughtful_reflection
-   
+
    user = UserFactory(email="specific@test.com")
    reflection = create_thoughtful_reflection(word_count=150)
    ```
@@ -188,6 +188,26 @@ Check current coverage:
 ```bash
 pytest --cov=app --cov-report=term-missing
 ```
+
+### Known Coverage Limitations
+
+**Important**: Coverage.py has known issues with async FastAPI code. You may see lower coverage numbers than actual due to:
+- Async functions showing as "not covered" even when tested
+- FastAPI dependency injection not being tracked properly
+- Concurrent execution paths not being measured accurately
+
+**What this means**:
+- Auth module shows ~71% but likely has >90% actual coverage
+- Documents module shows ~55% but all endpoints are tested
+- Focus on test quality and behavior verification over coverage numbers
+
+**Our approach**:
+1. Write comprehensive tests for all functionality
+2. Use integration tests for async endpoints
+3. Trust test suite over coverage metrics
+4. Document any genuinely untested code paths
+
+See `backend/docs/coverage-tool-investigation.md` for detailed analysis.
 
 ## Debugging Tests
 

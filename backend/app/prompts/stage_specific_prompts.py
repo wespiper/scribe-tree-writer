@@ -3,6 +3,8 @@ Stage-specific prompts for different phases of the writing process.
 Each stage has unique educational goals and questioning strategies.
 """
 
+from typing import Optional
+
 BRAINSTORMING_QUESTIONS = {
     "clarifying": [
         {
@@ -128,7 +130,7 @@ EDITING_QUESTIONS = {
 }
 
 
-def get_stage_questions(stage: str, question_type: str = None):
+def get_stage_questions(stage: str, question_type: Optional[str] = None):
     """Get questions appropriate for the current writing stage"""
     stage_map = {
         "brainstorming": BRAINSTORMING_QUESTIONS,

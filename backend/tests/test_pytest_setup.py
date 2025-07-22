@@ -2,6 +2,7 @@
 Test file to verify pytest infrastructure is working correctly.
 These tests don't require the API to be implemented.
 """
+
 import pytest
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -74,7 +75,11 @@ async def test_database_transaction_rollback(db_session: AsyncSession):
     from app.models.user import User
 
     # Create a test user
-    test_user = User(email="rollback@test.com", hashed_password="test_hash", full_name="Rollback Test")
+    test_user = User(
+        email="rollback@test.com",
+        hashed_password="test_hash",
+        full_name="Rollback Test",
+    )
 
     db_session.add(test_user)
     await db_session.commit()
@@ -95,18 +100,27 @@ async def test_multiple_database_operations(db_session: AsyncSession):
     from app.models.user import User
 
     # Create a user
-    user = User(email="multi@test.com", hashed_password="test_hash", full_name="Multi Test")
+    user = User(
+        email="multi@test.com", hashed_password="test_hash", full_name="Multi Test"
+    )
     db_session.add(user)
     await db_session.commit()
     await db_session.refresh(user)
 
     # Create a document for the user
-    document = Document(user_id=user.id, title="Test Document", content="This is test content", word_count=4)
+    document = Document(
+        user_id=user.id,
+        title="Test Document",
+        content="This is test content",
+        word_count=4,
+    )
     db_session.add(document)
     await db_session.commit()
 
     # Verify both exist
-    user_result = await db_session.execute(select(User).filter_by(email="multi@test.com"))
+    user_result = await db_session.execute(
+        select(User).filter_by(email="multi@test.com")
+    )
     assert user_result.scalar_one_or_none() is not None
 
     doc_result = await db_session.execute(select(Document).filter_by(user_id=user.id))

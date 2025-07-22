@@ -2,6 +2,7 @@
 Test that the pytest infrastructure is properly set up.
 These tests verify the test environment without requiring full API implementation.
 """
+
 import pytest
 
 from tests.factories import (

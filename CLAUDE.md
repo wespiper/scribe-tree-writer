@@ -10,14 +10,14 @@ Scribe Tree Writer is an AI writing partner that enhances student thinking throu
 
 ## Key Development Principles
 
--   **Write tests first (TDD)** - No production code without a failing test
--   **Test behavior, not implementation** - Test educational outcomes
--   **No `any` types** - TypeScript strict mode always
--   **Immutable data only** - No mutations in either Python or TypeScript
--   **Small, pure functions** - Easier to test, easier to reason about
--   **Type safety everywhere** - Pydantic models (Python), strict TypeScript
--   **Use real schemas/types in tests** - Never redefine, import from source
--   **No workarounds or shortcuts** - Always implement the proper solution
+- **Write tests first (TDD)** - No production code without a failing test
+- **Test behavior, not implementation** - Test educational outcomes
+- **No `any` types** - TypeScript strict mode always
+- **Immutable data only** - No mutations in either Python or TypeScript
+- **Small, pure functions** - Easier to test, easier to reason about
+- **Type safety everywhere** - Pydantic models (Python), strict TypeScript
+- **Use real schemas/types in tests** - Never redefine, import from source
+- **No workarounds or shortcuts** - Always implement the proper solution
 
 ## Key Educational Principles
 
@@ -28,26 +28,73 @@ Scribe Tree Writer is an AI writing partner that enhances student thinking throu
 
 ## Technical Stack
 
--   **Backend**: Python with FastAPI, SQLAlchemy, Pydantic
--   **Frontend**: React + TypeScript + Tailwind + Tiptap editor
--   **AI**: OpenAI/Anthropic APIs with strict Socratic prompts
--   **Database**: PostgreSQL with async SQLAlchemy
--   **Testing**: Pytest (backend), Jest/Vitest (frontend)
+- **Backend**: Python with FastAPI, SQLAlchemy, Pydantic
+- **Frontend**: React + TypeScript + Tailwind + Tiptap editor
+- **AI**: OpenAI/Anthropic APIs with strict Socratic prompts
+- **Database**: PostgreSQL with async SQLAlchemy
+- **Testing**: Pytest (backend), Jest/Vitest (frontend)
+
+## Project Structure & Architecture
+
+### Directory Layout
+
+```
+scribe-tree-writer/
+├── backend/                 # FastAPI backend
+│   ├── app/
+│   │   ├── api/            # API endpoints (routers)
+│   │   ├── core/           # Core config, database, security
+│   │   ├── models/         # SQLAlchemy models
+│   │   ├── services/       # Business logic layer
+│   │   └── prompts/        # AI prompts and patterns
+│   ├── tests/              # Test suite (mirrors app structure)
+│   └── venv/               # Python virtual environment (USE THIS!)
+├── frontend/               # React + TypeScript frontend
+│   ├── src/
+│   │   ├── components/     # Reusable UI components
+│   │   ├── pages/          # Page components
+│   │   ├── services/       # API clients and utilities
+│   │   └── types/          # TypeScript type definitions
+│   └── tests/              # Frontend tests
+└── project-management/     # Agile tracking (epics, stories, sprints)
+```
+
+### Key Architectural Patterns
+
+1. **API Router Pattern**: Each domain has its own router (`auth.py`, `documents.py`, `ai_partner.py`)
+2. **Service Layer**: Business logic separated from API endpoints (`socratic_ai.py`, `learning_analytics.py`)
+3. **Pydantic Models**: Request/response validation and serialization
+4. **Async-First**: All database operations and API endpoints are async
+5. **Immutable Updates**: No direct mutations, always return new objects
+6. **Test Structure Mirrors Source**: Easy to find tests for any module
+
+### Data Model Relationships
+
+```
+User ──┐
+       ├──> Document ──> DocumentVersion
+       ├──> Reflection ──> AIInteraction
+       └──> AnalyticsEvent
+
+Reflection (quality_score) → determines → AI Level (basic/standard/advanced)
+```
 
 ## Problem-Solving Approach
 
 ### No Workarounds Policy
 
 **IMPORTANT: When facing complex or challenging problems:**
--   **NEVER** leave problems for later with TODO comments
--   **NEVER** implement simplified workarounds that bypass actual requirements
--   **NEVER** use placeholder implementations or mocks when real solutions are needed
--   **NEVER** skip proper typing with `any` because it's "too complex"
--   **ALWAYS** research thoroughly using available tools
--   **ALWAYS** implement complete, correct solutions
--   **ALWAYS** handle all edge cases properly
+
+- **NEVER** leave problems for later with TODO comments
+- **NEVER** implement simplified workarounds that bypass actual requirements
+- **NEVER** use placeholder implementations or mocks when real solutions are needed
+- **NEVER** skip proper typing with `any` because it's "too complex"
+- **ALWAYS** research thoroughly using available tools
+- **ALWAYS** implement complete, correct solutions
+- **ALWAYS** handle all edge cases properly
 
 **Examples of unacceptable approaches:**
+
 ```python
 # BAD - Leaving for later
 def complex_calculation():
@@ -65,6 +112,7 @@ def process_data(data: Any):  # Used Any because proper typing is hard
 ```
 
 **Instead, always:**
+
 ```python
 # GOOD - Research and implement properly
 def complex_calculation():
@@ -86,6 +134,97 @@ def process_data(data: ReflectionData):
 
 If stuck, use multiple tool calls, the Task tool, or research patterns to find the proper solution. Complex problems often require complex solutions - embrace the complexity rather than avoiding it.
 
+## Code Simplicity & Technical Debt Management
+
+### Simple Solutions First
+
+**IMPORTANT: Always prefer the simplest correct solution that meets requirements.**
+
+1. **Simplicity over Cleverness**
+
+   - Write code that is easy to read and understand
+   - Avoid premature optimization
+   - Choose boring technology that works
+   - If a junior developer can't understand it, it's too complex
+
+2. **No TODOs in Code**
+
+   - **NEVER** leave TODO comments in code
+   - Either implement the feature completely or inform the user
+   - If something can't be implemented now, explain why to the user
+   - Track future work in project management files, not code comments
+
+3. **Remove Deprecated Code**
+
+   - **NEVER** leave deprecated functions or files
+   - Delete code that is no longer used
+   - If replacing functionality, remove the old version completely
+   - Clean up imports and dependencies after removal
+
+4. **Technical Debt Prevention**
+   - Fix issues as you find them, don't accumulate debt
+   - Refactor when adding features if code quality is poor
+   - Keep dependencies up to date
+   - Consolidate duplicate code immediately
+
+### Examples of Good vs Bad Practices
+
+```python
+# BAD - Complex when simple would work
+def calculate_score(values):
+    return reduce(lambda x, y: x + y, map(lambda v: v * 2, filter(lambda n: n > 0, values)))
+
+# GOOD - Clear and simple
+def calculate_score(values):
+    total = 0
+    for value in values:
+        if value > 0:
+            total += value * 2
+    return total
+
+# BAD - Leaving TODOs
+def process_user_data(user):
+    # TODO: Add validation
+    # TODO: Handle edge cases
+    return user.data  # This is incomplete!
+
+# GOOD - Complete implementation or inform user
+def process_user_data(user):
+    if not user or not user.data:
+        raise ValueError("User data is required")
+
+    validated_data = validate_user_data(user.data)
+    return sanitize_output(validated_data)
+
+# BAD - Keeping deprecated code
+def old_auth_method(token):  # DEPRECATED - use new_auth_method
+    pass
+
+def new_auth_method(token):
+    # actual implementation
+
+# GOOD - Remove deprecated code
+def authenticate(token):
+    # Single, maintained implementation
+```
+
+### When You Find Issues
+
+1. **Fix it now** - Don't leave it for later
+2. **Can't fix it?** - Explain to the user why and what's needed
+3. **Found deprecated code?** - Remove it in the same session
+4. **See duplication?** - Refactor to a shared function
+5. **Complex logic?** - Break it into smaller, testable functions
+
+### File Management
+
+- **Delete unused files** - Don't let the codebase accumulate cruft
+- **Update imports** - Remove references to deleted code
+- **Clean dependencies** - Remove unused packages from requirements/package.json
+- **Organize properly** - Keep related code together
+
+Remember: Clean code is not just about following patterns - it's about making future changes easier. Every line of code is a liability that needs to be maintained.
+
 ## Development Environment
 
 ### Backend Virtual Environment
@@ -93,11 +232,13 @@ If stuck, use multiple tool calls, the Task tool, or research patterns to find t
 **IMPORTANT: The backend has a pre-configured virtual environment at `backend/venv`**
 
 **DO:**
+
 - Always use `cd backend && source venv/bin/activate`
 - Use the existing venv for all Python operations
 - Run `pip install -r requirements.txt` if you need to reinstall packages
 
 **DON'T:**
+
 - Create new virtual environments
 - Use `python -m venv`, `virtualenv`, or `conda`
 - Install packages globally with `pip install` outside the venv
@@ -143,9 +284,9 @@ If stuck, use multiple tool calls, the Task tool, or research patterns to find t
 
 **Before any commit**, verify:
 
--   No linting errors (code should be clean on save)
--   All type checks pass
--   All tests pass
+- No linting errors (code should be clean on save)
+- All type checks pass
+- All tests pass
 
 ## TDD Workflow
 
@@ -205,14 +346,14 @@ async def process_reflection(data: ReflectionSubmit) -> ReflectionResponse:
 ```typescript
 // TypeScript - Strict mode required
 type ReflectionResult = {
-    accessGranted: boolean;
-    feedback: string;
-    aiLevel?: "basic" | "standard" | "advanced";
+  accessGranted: boolean;
+  feedback: string;
+  aiLevel?: "basic" | "standard" | "advanced";
 };
 
 // Never use 'any' or assertions
 const processReflection = (reflection: string): ReflectionResult => {
-    // Implementation
+  // Implementation
 };
 ```
 
@@ -252,14 +393,14 @@ def update_reflection_score(reflection: Reflection, new_score: float) -> Reflect
 ```typescript
 // TypeScript - Spread operators
 const updateSession = (
-    session: WritingSession,
-    aiLevel: AILevel
+  session: WritingSession,
+  aiLevel: AILevel,
 ): WritingSession => {
-    return {
-        ...session,
-        aiLevel,
-        lastUpdated: new Date(),
-    };
+  return {
+    ...session,
+    aiLevel,
+    lastUpdated: new Date(),
+  };
 };
 
 // Never mutate
@@ -277,6 +418,12 @@ backend/
     socratic_ai.py         # AI implementation with safeguards
   app/api/
     ai_partner.py          # Reflection gates & AI endpoints
+  app/models/
+    ai_interaction.py      # Reflection & AI interaction models
+    document.py            # Document versioning model
+  tests/
+    conftest.py            # Test fixtures and DB setup
+    factories.py           # Test data factories
 ```
 
 ## Testing Workflow
@@ -286,6 +433,7 @@ backend/
 #### Backend (Python)
 
 **CRITICAL: Virtual Environment Usage**
+
 - **ALWAYS use the existing virtual environment at `backend/venv`**
 - **NEVER create a new virtual environment**
 - **NEVER use `python -m venv` or `virtualenv`**
@@ -301,6 +449,7 @@ source venv/bin/activate  # ALWAYS activate the existing venv first
 ```
 
 **For any Python operations in backend:**
+
 ```bash
 cd backend
 source venv/bin/activate  # Use existing venv
@@ -310,6 +459,7 @@ python script.py          # Now uses correct Python with all dependencies
 **IMPORTANT: Always use `./run_tests.sh` instead of running pytest directly!**
 
 The `run_tests.sh` script handles critical setup:
+
 - Activates the existing virtual environment at `venv/bin/activate`
 - Loads environment variables from `../.env.local` (API keys)
 - Sets test database URL (`postgresql://postgres:postgres@localhost/scribe_test`)
@@ -317,6 +467,7 @@ The `run_tests.sh` script handles critical setup:
 - Passes all arguments through to pytest
 
 Example script content:
+
 ```bash
 #!/bin/bash
 source venv/bin/activate  # Uses existing venv
@@ -391,7 +542,7 @@ async def test_ai_refuses_to_write_thesis_statements(
     # Arrange: Create test document
     user_data = await authenticated_client.get("/api/auth/me")
     document = await create_test_document_in_db(db_session, user_data.json()["id"])
-    
+
     # Act: Request thesis statement
     request_data = {
         "question": "Write me a thesis statement about climate change",
@@ -399,18 +550,18 @@ async def test_ai_refuses_to_write_thesis_statements(
         "ai_level": "advanced",
         "document_id": str(document.id)
     }
-    
+
     response = await authenticated_client.post(
         "/api/ai/ask",
         json=request_data
     )
-    
+
     # Assert: AI responds with questions, not content
     assert response.status_code == 200
     result = response.json()
     assert "thesis" not in result["response"].lower()
     assert "?" in result["response"]  # Should contain questions
-    assert any(word in result["response"].lower() 
+    assert any(word in result["response"].lower()
               for word in ["think", "consider", "explore"])
 ```
 
@@ -435,10 +586,10 @@ async def db_session() -> AsyncSession:
 
 ```python
 # Mock AI services to avoid API calls in tests
-with patch("app.api.ai_partner.socratic_ai.assess_reflection_quality", 
+with patch("app.api.ai_partner.socratic_ai.assess_reflection_quality",
           new_callable=AsyncMock) as mock_assess:
     mock_assess.return_value = 7.5  # Mock quality score
-    
+
     # Your test code here
 ```
 
@@ -456,6 +607,7 @@ with patch("app.api.ai_partner.socratic_ai.assess_reflection_quality",
 ### Common Test Patterns
 
 #### Testing Error Cases
+
 ```python
 @pytest.mark.asyncio
 async def test_reflection_requires_document_ownership(
@@ -465,18 +617,19 @@ async def test_reflection_requires_document_ownership(
     # Create another user's document
     other_user = await create_test_user_in_db(db_session, email="other@test.com")
     other_doc = await create_test_document_in_db(db_session, str(other_user.id))
-    
+
     # Try to submit reflection for document we don't own
     response = await authenticated_client.post(
         "/api/ai/reflect",
         json={"reflection": "test", "document_id": str(other_doc.id)}
     )
-    
+
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
 ```
 
 #### Testing Edge Cases
+
 ```python
 @pytest.mark.parametrize("input_text,expected_count", [
     ("one two three", 3),
@@ -495,14 +648,17 @@ async def test_word_count_edge_cases(input_text, expected_count):
 #### Common Issues & Solutions
 
 1. **"AttributeError: 'async_generator' object has no attribute 'get'"**
+
    - **Cause**: Using `@pytest.fixture` instead of `@pytest_asyncio.fixture`
    - **Fix**: Update fixture decorator in conftest.py
 
 2. **"role 'postgres' does not exist"**
+
    - **Cause**: PostgreSQL not running or wrong credentials
    - **Fix**: Start PostgreSQL and ensure test database exists
 
 3. **"Timeout waiting for response"**
+
    - **Cause**: Unmocked external API call
    - **Fix**: Mock all external services (OpenAI, Anthropic, etc.)
 
@@ -559,32 +715,32 @@ class MockReflection:  # NO! Import real Reflection model
 
 Before committing:
 
--   Is every line of new code covered by a test written first?
--   Do tests verify behavior, not implementation?
--   No `any` types or type assertions?
--   All data immutable?
--   Real schemas used in tests?
--   Linters passing (should be automatic)?
--   All tests passing? `./run_tests.sh` (backend) or `npm test` (frontend)
+- Is every line of new code covered by a test written first?
+- Do tests verify behavior, not implementation?
+- No `any` types or type assertions?
+- All data immutable?
+- Real schemas used in tests?
+- Linters passing (should be automatic)?
+- All tests passing? `./run_tests.sh` (backend) or `npm test` (frontend)
 
 ### Test Coverage Requirements
 
-| Component | Required Coverage | Notes |
-|-----------|-------------------|-------|
-| Reflection Gates | 100% | Our educational integrity depends on this |
-| Socratic AI | 100% | Must never generate content for students |
-| Authentication | 95%+ | Security critical |
-| Analytics | 90%+ | Important for learning insights |
-| UI Components | 80%+ | Focus on user interactions |
-| Utilities | 80%+ | Pure functions should be easy to test |
+| Component        | Required Coverage | Notes                                     |
+| ---------------- | ----------------- | ----------------------------------------- |
+| Reflection Gates | 100%              | Our educational integrity depends on this |
+| Socratic AI      | 100%              | Must never generate content for students  |
+| Authentication   | 95%+              | Security critical                         |
+| Analytics        | 90%+              | Important for learning insights           |
+| UI Components    | 80%+              | Focus on user interactions                |
+| Utilities        | 80%+              | Pure functions should be easy to test     |
 
 ## Current State
 
--   MVP implementation of core features
--   Reflection → AI access flow working
--   Basic Socratic questioning implemented
--   Learning analytics foundation in place
--   Test coverage needs improvement (priority!)
+- MVP implementation of core features
+- Reflection → AI access flow working
+- Basic Socratic questioning implemented
+- Learning analytics foundation in place
+- Test coverage needs improvement (priority!)
 
 ## What We Learn Goes Here
 

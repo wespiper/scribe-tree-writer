@@ -1,17 +1,17 @@
 # STORY-010: Pytest Infrastructure Setup
 
-**Epic**: [EPIC-001](../../epics/EPIC-001-tdd-implementation.md)  
-**Priority**: 🚨 CRITICAL  
-**Points**: 5  
-**Sprint**: 1 (First task!)  
-**Status**: ✅ COMPLETED  
-**Completed**: July 20, 2025  
+**Epic**: [EPIC-001](../../epics/EPIC-001-tdd-implementation.md)
+**Priority**: 🚨 CRITICAL
+**Points**: 5
+**Sprint**: 1 (First task!)
+**Status**: ✅ COMPLETED
+**Completed**: July 20, 2025
 
 ## User Story
 
-AS A developer wanting to write tests  
-I WANT a properly configured pytest environment  
-SO THAT I can write async tests for FastAPI endpoints  
+AS A developer wanting to write tests
+I WANT a properly configured pytest environment
+SO THAT I can write async tests for FastAPI endpoints
 
 ## Context
 
@@ -30,6 +30,7 @@ We have an empty `/backend/tests/` directory. We need full pytest setup with asy
 ## Technical Tasks
 
 ### Task 1: Install test dependencies
+
 ```bash
 # Add to requirements.txt or create requirements-test.txt
 pytest==7.4.3
@@ -41,6 +42,7 @@ faker==20.1.0  # For realistic test data
 ```
 
 ### Task 2: Configure pytest
+
 ```ini
 # backend/pytest.ini
 [tool:pytest]
@@ -50,7 +52,7 @@ python_files = test_*.py
 python_classes = Test*
 python_functions = test_*
 asyncio_mode = auto
-addopts = 
+addopts =
     --verbose
     --cov=app
     --cov-report=term-missing
@@ -59,6 +61,7 @@ addopts =
 ```
 
 ### Task 3: Create test database configuration
+
 ```python
 # backend/tests/conftest.py
 import pytest
@@ -100,6 +103,7 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 ```
 
 ### Task 4: Create test factories
+
 ```python
 # backend/tests/factories.py
 import factory
@@ -111,7 +115,7 @@ from app.models.ai_interaction import Reflection
 class UserFactory(factory.Factory):
     class Meta:
         model = User
-    
+
     id = factory.Faker("uuid4")
     email = factory.Faker("email")
     full_name = factory.Faker("name")
@@ -120,7 +124,7 @@ class UserFactory(factory.Factory):
 class DocumentFactory(factory.Factory):
     class Meta:
         model = Document
-    
+
     id = factory.Faker("uuid4")
     user_id = factory.LazyAttribute(lambda obj: obj.user.id)
     title = factory.Faker("sentence", nb_words=4)
@@ -130,7 +134,7 @@ class DocumentFactory(factory.Factory):
 class ReflectionFactory(factory.Factory):
     class Meta:
         model = Reflection
-    
+
     id = factory.Faker("uuid4")
     user_id = factory.LazyAttribute(lambda obj: obj.user.id)
     document_id = factory.LazyAttribute(lambda obj: obj.document.id)
@@ -140,6 +144,7 @@ class ReflectionFactory(factory.Factory):
 ```
 
 ### Task 5: Create test utilities
+
 ```python
 # backend/tests/utils.py
 from typing import Dict, Any
@@ -154,12 +159,12 @@ async def create_test_user(client: AsyncClient) -> Dict[str, Any]:
     }
     response = await client.post("/api/auth/register", json=user_data)
     assert response.status_code == 200
-    
+
     # Login to get token
     login_data = {"username": user_data["email"], "password": user_data["password"]}
     response = await client.post("/api/auth/login", data=login_data)
     token = response.json()["access_token"]
-    
+
     return {"Authorization": f"Bearer {token}"}
 
 def create_thoughtful_reflection(word_count: int = 100) -> str:
@@ -172,6 +177,7 @@ def create_thoughtful_reflection(word_count: int = 100) -> str:
 ```
 
 ### Task 6: Write example test
+
 ```python
 # backend/tests/test_setup_example.py
 import pytest
@@ -192,7 +198,7 @@ async def test_user_creation_flow(client: AsyncClient):
         "password": "securepass123",
         "full_name": "New User"
     }
-    
+
     response = await client.post("/api/auth/register", json=user_data)
     assert response.status_code == 200
     assert response.json()["email"] == user_data["email"]
@@ -210,6 +216,7 @@ async def test_user_creation_flow(client: AsyncClient):
 ## Completed Tasks
 
 See task breakdown files:
+
 - [TASK-010-001](../../tasks/backend/TASK-010-001-install-dependencies.md): Install Test Dependencies
 - [TASK-010-002](../../tasks/backend/TASK-010-002-pytest-configuration.md): Configure Pytest
 - [TASK-010-003](../../tasks/backend/TASK-010-003-test-fixtures.md): Create Test Database Fixtures

@@ -30,7 +30,7 @@ class TestAskEndpointBoundaries:
         user_response = await authenticated_client.get("/api/auth/me")
         assert user_response.status_code == 200
         user_data = user_response.json()
-        
+
         document = await create_test_document_in_db(db_session, user_data["id"])
 
         request_data = {
@@ -40,12 +40,15 @@ class TestAskEndpointBoundaries:
             "document_id": str(document.id),
         }
 
-        with patch("app.api.ai_partner.socratic_ai.generate_socratic_response", new_callable=AsyncMock) as mock_ai:
+        with patch(
+            "app.api.ai_partner.socratic_ai.generate_socratic_response",
+            new_callable=AsyncMock,
+        ) as mock_ai:
             mock_response = """I see you're working on a thesis about climate change.
-            
+
             What specific aspect of climate change concerns you most?
             What's your position on this issue?
-            
+
             Your thesis will be strongest when it reflects your unique perspective."""
 
             mock_ai.return_value = (mock_response, "critical")
@@ -74,7 +77,7 @@ class TestAskEndpointBoundaries:
         user_response = await authenticated_client.get("/api/auth/me")
         assert user_response.status_code == 200
         user_data = user_response.json()
-        
+
         document = await create_test_document_in_db(db_session, user_data["id"])
 
         request_data = {
@@ -84,12 +87,15 @@ class TestAskEndpointBoundaries:
             "document_id": str(document.id),
         }
 
-        with patch("app.api.ai_partner.socratic_ai.generate_socratic_response", new_callable=AsyncMock) as mock_ai:
+        with patch(
+            "app.api.ai_partner.socratic_ai.generate_socratic_response",
+            new_callable=AsyncMock,
+        ) as mock_ai:
             mock_response = """Shakespeare is a rich topic!
-            
+
             What specific aspect of Shakespeare's influence interests you?
             What evidence or examples are you considering?
-            
+
             Let's explore your ideas together."""
 
             mock_ai.return_value = (mock_response, "analytical")
@@ -131,7 +137,7 @@ class TestAskEndpointBoundaries:
         user_response = await authenticated_client.get("/api/auth/me")
         assert user_response.status_code == 200
         user_data = user_response.json()
-        
+
         document = await create_test_document_in_db(db_session, user_data["id"])
 
         request_data = {
@@ -141,12 +147,15 @@ class TestAskEndpointBoundaries:
             "document_id": str(document.id),
         }
 
-        with patch("app.api.ai_partner.socratic_ai.generate_socratic_response", new_callable=AsyncMock) as mock_ai:
+        with patch(
+            "app.api.ai_partner.socratic_ai.generate_socratic_response",
+            new_callable=AsyncMock,
+        ) as mock_ai:
             mock_response = f"""I understand you need help with your {request_type.replace('_', ' ')}.
-            
+
             What main idea are you trying to express?
             How does this fit with your overall argument?
-            
+
             Let's work through your thoughts step by step."""
 
             mock_ai.return_value = (mock_response, expected_type)
@@ -173,11 +182,14 @@ class TestAskEndpointBoundaries:
         user_response = await authenticated_client.get("/api/auth/me")
         assert user_response.status_code == 200
         user_data = user_response.json()
-        
+
         document = await create_test_document_in_db(db_session, user_data["id"])
         desperate_requests = create_desperate_requests()
 
-        with patch("app.api.ai_partner.socratic_ai.generate_socratic_response", new_callable=AsyncMock) as mock_ai:
+        with patch(
+            "app.api.ai_partner.socratic_ai.generate_socratic_response",
+            new_callable=AsyncMock,
+        ) as mock_ai:
             for request in desperate_requests[:3]:
                 request_data = {
                     "question": request,
@@ -187,16 +199,18 @@ class TestAskEndpointBoundaries:
                 }
 
                 mock_response = """I understand the pressure you're feeling.
-                
+
                 What's the core message you want to communicate?
                 Even with limited time, what's most important to say?
-                
+
                 You have valuable ideas - let's bring them out together."""
 
                 mock_ai.return_value = (mock_response, "clarifying")
 
                 # Act
-                response = await authenticated_client.post("/api/ai/ask", json=request_data)
+                response = await authenticated_client.post(
+                    "/api/ai/ask", json=request_data
+                )
 
                 # Assert
                 assert response.status_code == 200
@@ -217,11 +231,14 @@ class TestAskEndpointBoundaries:
         user_response = await authenticated_client.get("/api/auth/me")
         assert user_response.status_code == 200
         user_data = user_response.json()
-        
+
         document = await create_test_document_in_db(db_session, user_data["id"])
         subtle_requests = create_subtle_content_requests()
 
-        with patch("app.api.ai_partner.socratic_ai.generate_socratic_response", new_callable=AsyncMock) as mock_ai:
+        with patch(
+            "app.api.ai_partner.socratic_ai.generate_socratic_response",
+            new_callable=AsyncMock,
+        ) as mock_ai:
             for request in subtle_requests[:3]:
                 request_data = {
                     "question": request,
@@ -231,17 +248,19 @@ class TestAskEndpointBoundaries:
                 }
 
                 mock_response = """I hear you're looking for structural guidance.
-                
+
                 What's working well in your current draft?
                 Where do you feel it could be stronger?
                 What would make your argument more compelling?
-                
+
                 Your authentic voice is your greatest asset."""
 
                 mock_ai.return_value = (mock_response, "analytical")
 
                 # Act
-                response = await authenticated_client.post("/api/ai/ask", json=request_data)
+                response = await authenticated_client.post(
+                    "/api/ai/ask", json=request_data
+                )
 
                 # Assert
                 assert response.status_code == 200
@@ -263,17 +282,41 @@ class TestAskEndpointBoundaries:
         user_response = await authenticated_client.get("/api/auth/me")
         assert user_response.status_code == 200
         user_data = user_response.json()
-        
+
         document = await create_test_document_in_db(db_session, user_data["id"])
 
         test_cases = [
-            ("basic", ["What's the main point you're trying to make?", "Can you explain that idea more?"]),
-            ("standard", ["What evidence supports this claim?", "How does this connect to your thesis?"]),
-            ("advanced", ["What are the implications of this argument?", "What assumptions are you making here?"]),
+            (
+                "basic",
+                [
+                    "What's the main point you're trying to make?",
+                    "Can you explain that idea more?",
+                ],
+            ),
+            (
+                "standard",
+                [
+                    "What evidence supports this claim?",
+                    "How does this connect to your thesis?",
+                ],
+            ),
+            (
+                "advanced",
+                [
+                    "What are the implications of this argument?",
+                    "What assumptions are you making here?",
+                ],
+            ),
         ]
 
-        with patch("app.api.ai_partner.socratic_ai.generate_socratic_response", new_callable=AsyncMock) as mock_ai:
-            with patch("app.api.ai_partner.socratic_ai.get_follow_up_prompts", new_callable=AsyncMock) as mock_follow:
+        with patch(
+            "app.api.ai_partner.socratic_ai.generate_socratic_response",
+            new_callable=AsyncMock,
+        ) as mock_ai:
+            with patch(
+                "app.api.ai_partner.socratic_ai.get_follow_up_prompts",
+                new_callable=AsyncMock,
+            ) as mock_follow:
                 for ai_level, expected_prompts in test_cases:
                     request_data = {
                         "question": "How do I make my argument stronger?",
@@ -282,11 +325,16 @@ class TestAskEndpointBoundaries:
                         "document_id": str(document.id),
                     }
 
-                    mock_ai.return_value = ("Let's explore that together...", "analytical")
+                    mock_ai.return_value = (
+                        "Let's explore that together...",
+                        "analytical",
+                    )
                     mock_follow.return_value = expected_prompts
 
                     # Act
-                    response = await authenticated_client.post("/api/ai/ask", json=request_data)
+                    response = await authenticated_client.post(
+                        "/api/ai/ask", json=request_data
+                    )
 
                     # Assert
                     assert response.status_code == 200
@@ -303,7 +351,7 @@ class TestAskEndpointBoundaries:
         user_response = await authenticated_client.get("/api/auth/me")
         assert user_response.status_code == 200
         user_data = user_response.json()
-        
+
         document = await create_test_document_in_db(db_session, user_data["id"])
 
         request_data = {
@@ -313,19 +361,27 @@ class TestAskEndpointBoundaries:
             "document_id": str(document.id),
         }
 
-        with patch("app.api.ai_partner.socratic_ai.generate_socratic_response", new_callable=AsyncMock) as mock_ai:
-            with patch("app.api.ai_partner.analytics_service.track_ai_interaction", new_callable=AsyncMock) as mock_track:
+        with patch(
+            "app.api.ai_partner.socratic_ai.generate_socratic_response",
+            new_callable=AsyncMock,
+        ) as mock_ai:
+            with patch(
+                "app.api.ai_partner.analytics_service.track_ai_interaction",
+                new_callable=AsyncMock,
+            ) as mock_track:
                 mock_response = """Great question about argumentation!
-                
+
                 What do you think makes an argument convincing?
                 How do you evaluate arguments you encounter?
-                
+
                 Consider both logic and persuasion."""
 
                 mock_ai.return_value = (mock_response, "analytical")
 
                 # Act
-                response = await authenticated_client.post("/api/ai/ask", json=request_data)
+                response = await authenticated_client.post(
+                    "/api/ai/ask", json=request_data
+                )
 
                 # Assert
                 assert response.status_code == 200
@@ -344,7 +400,9 @@ class TestAskEndpointBoundaries:
         """API should only allow questions on user's own documents"""
         # Arrange
         other_user = await create_test_user_in_db(db_session, email="other@example.com")
-        other_document = await create_test_document_in_db(db_session, str(other_user.id))
+        other_document = await create_test_document_in_db(
+            db_session, str(other_user.id)
+        )
 
         request_data = {
             "question": "Help me with this",
@@ -370,7 +428,7 @@ class TestAskEndpointBoundaries:
         user_response = await authenticated_client.get("/api/auth/me")
         assert user_response.status_code == 200
         user_data = user_response.json()
-        
+
         document = await create_test_document_in_db(db_session, user_data["id"])
 
         request_data = {
@@ -380,7 +438,10 @@ class TestAskEndpointBoundaries:
             "document_id": str(document.id),
         }
 
-        with patch("app.api.ai_partner.socratic_ai.generate_socratic_response", new_callable=AsyncMock) as mock_ai:
+        with patch(
+            "app.api.ai_partner.socratic_ai.generate_socratic_response",
+            new_callable=AsyncMock,
+        ) as mock_ai:
             mock_ai.side_effect = Exception("AI service unavailable")
 
             # Act
@@ -403,7 +464,7 @@ class TestConversationHistory:
         user_response = await authenticated_client.get("/api/auth/me")
         assert user_response.status_code == 200
         user_data = user_response.json()
-        
+
         document = await create_test_document_in_db(db_session, user_data["id"])
 
         # Create multiple interactions
@@ -413,7 +474,10 @@ class TestConversationHistory:
             ("What should I write next?", "advanced", "critical"),
         ]
 
-        with patch("app.api.ai_partner.socratic_ai.generate_socratic_response", new_callable=AsyncMock) as mock_ai:
+        with patch(
+            "app.api.ai_partner.socratic_ai.generate_socratic_response",
+            new_callable=AsyncMock,
+        ) as mock_ai:
             for question, ai_level, q_type in interactions:
                 request_data = {
                     "question": question,
@@ -423,10 +487,10 @@ class TestConversationHistory:
                 }
 
                 mock_response = f"""I understand you're working on your {q_type} thinking.
-                
+
                 What are you trying to accomplish?
                 How can we explore this together?
-                
+
                 Your ideas matter most here."""
 
                 mock_ai.return_value = (mock_response, q_type)
@@ -434,7 +498,9 @@ class TestConversationHistory:
                 await authenticated_client.post("/api/ai/ask", json=request_data)
 
         # Act - Get conversation history
-        response = await authenticated_client.get(f"/api/ai/conversations/{document.id}")
+        response = await authenticated_client.get(
+            f"/api/ai/conversations/{document.id}"
+        )
 
         # Assert
         assert response.status_code == 200

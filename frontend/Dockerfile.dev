@@ -1,0 +1,25 @@
+# Development Dockerfile for Frontend
+# Optimized for development with hot-reloading
+
+FROM node:20-alpine
+
+# Install additional tools for development
+RUN apk add --no-cache git
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy application code (will be overridden by volume mount)
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+# Development command with hot-reload
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]

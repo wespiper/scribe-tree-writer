@@ -1,44 +1,129 @@
-import React from 'react'
+import React from 'react';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger'
-  size?: 'sm' | 'md' | 'lg'
-  isLoading?: boolean
-  children: React.ReactNode
+type ButtonSize = 'sm' | 'md' | 'lg';
+
+interface ResponsiveSize {
+  base?: ButtonSize;
+  sm?: ButtonSize;
+  md?: ButtonSize;
+  lg?: ButtonSize;
+  xl?: ButtonSize;
+}
+
+interface ButtonProps
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
+  variant?: 'primary' | 'secondary' | 'danger';
+  size?: ButtonSize;
+  responsiveSize?: ResponsiveSize;
+  touchFriendly?: boolean;
+  fullWidthMobile?: boolean;
+  isLoading?: boolean;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
 }
 
 export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'md',
+  responsiveSize,
+  touchFriendly = false,
+  fullWidthMobile = false,
   isLoading = false,
   disabled,
+  icon,
   children,
   className = '',
   ...rest
 }) => {
-  const baseStyles = 'font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2'
-  
+  const baseStyles =
+    'font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
+
   const variantStyles = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500'
-  }
-  
+    primary:
+      'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 dark:bg-primary-500 dark:text-white dark:hover:bg-primary-600 dark:focus:ring-primary-400',
+    secondary:
+      'bg-secondary-200 text-secondary-900 hover:bg-secondary-300 focus:ring-secondary-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 dark:focus:ring-gray-500',
+    danger:
+      'bg-error-600 text-white hover:bg-error-700 focus:ring-error-500 dark:bg-error-500 dark:hover:bg-error-600 dark:focus:ring-error-400 dark:text-white',
+  };
+
   const sizeStyles = {
     sm: 'px-3 py-1.5 text-sm',
     md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg'
-  }
-  
-  const disabledStyles = 'opacity-50 cursor-not-allowed'
-  
+    lg: 'px-6 py-3 text-lg',
+  };
+
+  // Generate responsive size classes
+  const getResponsiveSizeClasses = () => {
+    if (!responsiveSize) return sizeStyles[size];
+
+    const classes: string[] = [];
+    const breakpoints = ['base', 'sm', 'md', 'lg', 'xl'] as const;
+
+    breakpoints.forEach((bp) => {
+      const bpSize = responsiveSize[bp];
+      if (bpSize) {
+        const styleClasses = sizeStyles[bpSize].split(' ');
+
+        if (bp === 'base') {
+          classes.push(...styleClasses);
+        } else {
+          styleClasses.forEach((cls) => {
+            classes.push(`${bp}:${cls}`);
+          });
+        }
+      }
+    });
+
+    return classes.join(' ');
+  };
+
+  // Generate icon spacing classes
+  const getIconSpacingClasses = () => {
+    if (!icon) return '';
+
+    if (!responsiveSize) {
+      const spacing = { sm: 'gap-1', md: 'gap-2', lg: 'gap-3' };
+      return spacing[size];
+    }
+
+    const classes: string[] = [];
+    const spacing = { sm: 'gap-1', md: 'gap-2', lg: 'gap-3' };
+    const breakpoints = ['base', 'sm', 'md', 'lg', 'xl'] as const;
+
+    breakpoints.forEach((bp) => {
+      const bpSize = responsiveSize[bp];
+      if (bpSize) {
+        const gap = spacing[bpSize];
+        if (bp === 'base') {
+          classes.push(gap);
+        } else {
+          classes.push(`${bp}:${gap}`);
+        }
+      }
+    });
+
+    return classes.join(' ');
+  };
+
+  const disabledStyles = 'opacity-50 cursor-not-allowed dark:opacity-40';
+  const touchFriendlyStyles = touchFriendly ? 'min-h-[44px] min-w-[44px]' : '';
+  const fullWidthStyles = fullWidthMobile ? 'w-full sm:w-auto' : '';
+
   return (
     <button
       className={`
         ${baseStyles}
         ${variantStyles[variant]}
-        ${sizeStyles[size]}
-        ${(disabled || isLoading) ? disabledStyles : ''}
+        ${getResponsiveSizeClasses()}
+        ${disabled || isLoading ? disabledStyles : ''}
+        ${touchFriendlyStyles}
+        ${fullWidthStyles}
+        ${
+          icon
+            ? `flex items-center justify-center ${getIconSpacingClasses()}`
+            : ''
+        }
         ${className}
       `}
       disabled={disabled || isLoading}
@@ -46,7 +131,11 @@ export const Button: React.FC<ButtonProps> = ({
     >
       {isLoading ? (
         <span className="flex items-center">
-          <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+          <svg
+            className="animate-spin -ml-1 mr-2 h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
             <circle
               className="opacity-25"
               cx="12"
@@ -64,8 +153,11 @@ export const Button: React.FC<ButtonProps> = ({
           Loading...
         </span>
       ) : (
-        children
+        <>
+          {icon}
+          {children}
+        </>
       )}
     </button>
-  )
-}
+  );
+};

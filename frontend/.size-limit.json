@@ -1,0 +1,31 @@
+[
+  {
+    "name": "Main Bundle",
+    "path": "dist/assets/index-*.js",
+    "limit": "250 KB",
+    "gzip": true,
+    "brotli": false
+  },
+  {
+    "name": "CSS Bundle",
+    "path": "dist/assets/index-*.css",
+    "limit": "50 KB",
+    "gzip": true,
+    "brotli": false
+  },
+  {
+    "name": "Total App Size",
+    "path": ["dist/assets/index-*.js", "dist/assets/index-*.css"],
+    "limit": "300 KB",
+    "gzip": true,
+    "brotli": false
+  },
+  {
+    "name": "Vendor Dependencies",
+    "path": "dist/assets/vendor-*.js",
+    "limit": "150 KB",
+    "gzip": true,
+    "brotli": false,
+    "ignore": ["node_modules/@tiptap/**"]
+  }
+]

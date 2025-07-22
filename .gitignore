@@ -18,6 +18,9 @@ pip-delete-this-directory.txt
 .pytest_cache/
 *.log
 
+# Claude
+CLAUDE.md
+
 # Node
 node_modules/
 npm-debug.log*
@@ -76,3 +79,7 @@ logs/
 
 # OS generated files
 Thumbs.db
+
+# Planning files
+project-management/
+docs/mvp-agile-plan.md

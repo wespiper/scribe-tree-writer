@@ -1,74 +1,80 @@
-import React, { useState, useEffect } from 'react'
-import { Button } from '../Common/Button'
+import React, { useState, useEffect } from 'react';
+import { Button } from '../Common/Button';
 
 interface ReflectionGateProps {
-  documentId: string
-  onSuccess: (response: ReflectionResponse) => void
+  documentId: string;
+  onSuccess: (response: ReflectionResponse) => void;
 }
 
 interface ReflectionResponse {
-  access_granted: boolean
-  quality_score: number
-  ai_level?: string
-  feedback: string
-  suggestions?: string[]
-  initial_questions?: string[]
+  access_granted: boolean;
+  quality_score: number;
+  ai_level?: string;
+  feedback: string;
+  suggestions?: string[];
+  initial_questions?: string[];
 }
 
-export const ReflectionGate: React.FC<ReflectionGateProps> = ({ documentId, onSuccess }) => {
-  const [reflection, setReflection] = useState('')
-  const [wordCount, setWordCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [response, setResponse] = useState<ReflectionResponse | null>(null)
+export const ReflectionGate: React.FC<ReflectionGateProps> = ({
+  documentId,
+  onSuccess,
+}) => {
+  const [reflection, setReflection] = useState('');
+  const [wordCount, setWordCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [response, setResponse] = useState<ReflectionResponse | null>(null);
 
   useEffect(() => {
-    const words = reflection.trim().split(/\s+/).filter(word => word.length > 0)
-    setWordCount(words.length)
-  }, [reflection])
+    const words = reflection
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0);
+    setWordCount(words.length);
+  }, [reflection]);
 
   const handleSubmit = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       const res = await fetch('/api/ai/reflect', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
           reflection,
-          document_id: documentId
-        })
-      })
+          document_id: documentId,
+        }),
+      });
 
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`)
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
 
-      const data = await res.json()
-      setResponse(data)
+      const data = await res.json();
+      setResponse(data);
 
       if (data.access_granted) {
-        onSuccess(data)
-        setReflection('')
+        onSuccess(data);
+        setReflection('');
       }
     } catch (err) {
-      setError('Error submitting reflection. Please try again.')
+      setError('Error submitting reflection. Please try again.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleRetry = () => {
-    setError(null)
-    setResponse(null)
-    handleSubmit()
-  }
+    setError(null);
+    setResponse(null);
+    handleSubmit();
+  };
 
-  const isSubmitDisabled = wordCount < 50 || isLoading
+  const isSubmitDisabled = wordCount < 50 || isLoading;
 
   return (
     <div className="reflection-gate">
@@ -88,10 +94,13 @@ export const ReflectionGate: React.FC<ReflectionGateProps> = ({ documentId, onSu
             aria-describedby="word-count-helper"
             autoFocus
           />
-          
+
           <div className="mt-2 flex justify-between items-center">
             <div id="word-count-helper">
-              <span data-testid="word-count" className={wordCount < 50 ? 'text-gray-600' : 'text-green-600'}>
+              <span
+                data-testid="word-count"
+                className={wordCount < 50 ? 'text-gray-600' : 'text-green-600'}
+              >
                 {wordCount} / 50 words
               </span>
               {wordCount > 0 && wordCount < 50 && (
@@ -134,7 +143,7 @@ export const ReflectionGate: React.FC<ReflectionGateProps> = ({ documentId, onSu
             Let's Think Deeper
           </h3>
           <p className="text-yellow-800 mb-4">{response.feedback}</p>
-          
+
           {response.suggestions && response.suggestions.length > 0 && (
             <div>
               <p className="text-sm font-medium text-yellow-900 mb-2">
@@ -149,11 +158,11 @@ export const ReflectionGate: React.FC<ReflectionGateProps> = ({ documentId, onSu
               </ul>
             </div>
           )}
-          
+
           <Button
             onClick={() => {
-              setResponse(null)
-              setReflection('')
+              setResponse(null);
+              setReflection('');
             }}
             variant="secondary"
             size="sm"
@@ -171,25 +180,30 @@ export const ReflectionGate: React.FC<ReflectionGateProps> = ({ documentId, onSu
               {response.feedback}
             </h3>
             <p className="text-green-800 mb-4">
-              AI Level: {response.ai_level?.charAt(0).toUpperCase() + response.ai_level?.slice(1)}
+              AI Level:{' '}
+              {response.ai_level
+                ? response.ai_level.charAt(0).toUpperCase() +
+                  response.ai_level.slice(1)
+                : 'Unknown'}
             </p>
-            
-            {response.initial_questions && response.initial_questions.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-green-900 mb-2">
-                  Here are some questions to get you started:
-                </p>
-                <ul className="list-disc list-inside space-y-1">
-                  {response.initial_questions.map((question, index) => (
-                    <li key={index} className="text-green-800 text-sm">
-                      {question}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+
+            {response.initial_questions &&
+              response.initial_questions.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-green-900 mb-2">
+                    Here are some questions to get you started:
+                  </p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {response.initial_questions.map((question, index) => (
+                      <li key={index} className="text-green-800 text-sm">
+                        {question}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
           </div>
-          
+
           <div className="mt-4">
             <label htmlFor="reflection-textarea" className="sr-only">
               Your reflection
@@ -204,10 +218,15 @@ export const ReflectionGate: React.FC<ReflectionGateProps> = ({ documentId, onSu
               disabled={isLoading}
               aria-describedby="word-count-helper"
             />
-            
+
             <div className="mt-2 flex justify-between items-center">
               <div id="word-count-helper">
-                <span data-testid="word-count" className={wordCount < 50 ? 'text-gray-600' : 'text-green-600'}>
+                <span
+                  data-testid="word-count"
+                  className={
+                    wordCount < 50 ? 'text-gray-600' : 'text-green-600'
+                  }
+                >
                   {wordCount} / 50 words
                 </span>
                 {wordCount > 0 && wordCount < 50 && (
@@ -221,5 +240,5 @@ export const ReflectionGate: React.FC<ReflectionGateProps> = ({ documentId, onSu
         </div>
       )}
     </div>
-  )
-}
+  );
+};

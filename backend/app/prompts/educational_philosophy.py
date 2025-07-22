@@ -110,27 +110,51 @@ COGNITIVE_LOAD_ADAPTATIONS = {
 # Learning objective patterns by Bloom's taxonomy
 LEARNING_OBJECTIVES = {
     "remember": {
-        "prompts": ["What do you recall about", "Can you list the main points", "What information do you have"],
+        "prompts": [
+            "What do you recall about",
+            "Can you list the main points",
+            "What information do you have",
+        ],
         "avoid": ["analyze", "evaluate", "create"],
     },
     "understand": {
-        "prompts": ["Can you explain this in your own words", "What does this mean to you", "How would you summarize"],
+        "prompts": [
+            "Can you explain this in your own words",
+            "What does this mean to you",
+            "How would you summarize",
+        ],
         "avoid": ["memorize", "repeat", "copy"],
     },
     "apply": {
-        "prompts": ["How could you use this", "What examples demonstrate", "Where else might this apply"],
+        "prompts": [
+            "How could you use this",
+            "What examples demonstrate",
+            "Where else might this apply",
+        ],
         "avoid": ["just tell me", "give me the answer"],
     },
     "analyze": {
-        "prompts": ["What patterns do you notice", "How do these parts relate", "What's the connection between"],
+        "prompts": [
+            "What patterns do you notice",
+            "How do these parts relate",
+            "What's the connection between",
+        ],
         "avoid": ["list", "describe", "summarize"],
     },
     "evaluate": {
-        "prompts": ["What criteria would you use", "How would you judge", "What's your assessment of"],
+        "prompts": [
+            "What criteria would you use",
+            "How would you judge",
+            "What's your assessment of",
+        ],
         "avoid": ["accept", "assume", "take for granted"],
     },
     "create": {
-        "prompts": ["How might you combine", "What new approach could", "How would you design"],
+        "prompts": [
+            "How might you combine",
+            "What new approach could",
+            "How would you design",
+        ],
         "avoid": ["copy", "imitate", "follow"],
     },
 }
@@ -159,7 +183,9 @@ def validate_ai_response(response: str) -> tuple[bool, str]:
         return False, "Response lacks questioning or exploratory language"
 
     # Check for independence builders
-    has_independence = any(builder.lower() in response.lower() for builder in INDEPENDENCE_BUILDERS)
+    has_independence = any(
+        builder.lower() in response.lower() for builder in INDEPENDENCE_BUILDERS
+    )
 
     if not has_independence:
         return False, "Response doesn't promote independent thinking"

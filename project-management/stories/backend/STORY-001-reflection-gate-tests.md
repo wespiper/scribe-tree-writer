@@ -1,15 +1,15 @@
 # STORY-001: Reflection Gate Testing
 
-**Epic**: [EPIC-001](../../epics/EPIC-001-tdd-implementation.md)  
-**Priority**: 🚨 CRITICAL  
-**Points**: 8  
-**Sprint**: 1  
+**Epic**: [EPIC-001](../../epics/EPIC-001-tdd-implementation.md)
+**Priority**: 🚨 CRITICAL
+**Points**: 8
+**Sprint**: 1
 
 ## User Story
 
-AS A developer maintaining educational integrity  
-I WANT comprehensive tests for reflection gate logic  
-SO THAT we guarantee students must reflect deeply before AI access  
+AS A developer maintaining educational integrity
+I WANT comprehensive tests for reflection gate logic
+SO THAT we guarantee students must reflect deeply before AI access
 
 ## Context
 
@@ -29,6 +29,7 @@ The reflection gate is our most critical educational feature. It ensures student
 ## Technical Tasks
 
 ### Task 1: Set up test file structure
+
 ```bash
 backend/tests/
 ├── __init__.py
@@ -39,18 +40,20 @@ backend/tests/
 ```
 
 ### Task 2: Create test fixtures
+
 ```python
 # conftest.py
 @pytest.fixture
 async def test_user():
     """Create a test user"""
-    
+
 @pytest.fixture
 async def test_document(test_user):
     """Create a test document owned by user"""
 ```
 
 ### Task 3: Write reflection rejection tests
+
 ```python
 def test_reflection_under_50_words_rejected():
     reflection = "This is too short"  # Only 4 words
@@ -66,6 +69,7 @@ def test_low_quality_reflection_rejected():
 ```
 
 ### Task 4: Write quality assessment tests
+
 ```python
 def test_thoughtful_reflection_grants_standard_access():
     reflection = create_thoughtful_reflection(100)  # Helper
@@ -83,6 +87,7 @@ def test_exceptional_reflection_grants_advanced_access():
 ```
 
 ### Task 5: Write edge case tests
+
 ```python
 def test_empty_reflection_handled():
     result = await submit_reflection("", doc_id)
@@ -96,7 +101,7 @@ def test_whitespace_only_reflection():
 
 ## Definition of Done
 
-- [x] All tests written and passing  ✓ Tests written (need PostgreSQL running to execute)
+- [x] All tests written and passing ✓ Tests written (need PostgreSQL running to execute)
 - [ ] Test coverage > 95% for reflection logic
 - [x] Tests are readable and well-documented
 - [x] No implementation changes (only tests)

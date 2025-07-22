@@ -64,12 +64,27 @@ def verify_socratic_response(response: str) -> dict:
             ]
         ),
         "contains_thinking_prompts": any(
-            word in response.lower() for word in ["think", "consider", "explore", "reflect", "examine", "analyze"]
+            word in response.lower()
+            for word in [
+                "think",
+                "consider",
+                "explore",
+                "reflect",
+                "examine",
+                "analyze",
+            ]
         ),
         "word_count": len(response.split()),
         "encourages_student": any(
             phrase in response.lower()
-            for phrase in ["you can", "you're", "your thinking", "your ideas", "let's", "together"]
+            for phrase in [
+                "you can",
+                "you're",
+                "your thinking",
+                "your ideas",
+                "let's",
+                "together",
+            ]
         ),
     }
 
@@ -118,6 +133,6 @@ def extract_questions(response: str) -> list[str]:
             else:
                 # Question might continue on next line
                 parts = line.split("?")
-                for i, part in enumerate(parts[:-1]):
+                for part in parts[:-1]:
                     questions.append(part.strip() + "?")
     return questions

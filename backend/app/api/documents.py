@@ -1,27 +1,54 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel, Field, validator
 from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
 from app.core.database import get_db
+from app.core.security_middleware import rate_limit_general
 from app.models.document import Document, DocumentVersion
 from app.models.user import User
+from app.utils.immutable import update_with_audit
+from app.utils.security_utils import sanitize_text_input
 
 router = APIRouter()
 
 
 class DocumentCreate(BaseModel):
-    title: Optional[str] = "Untitled Document"
-    content: Optional[str] = ""
+    title: Optional[str] = Field(default="Untitled Document", max_length=255)
+    content: Optional[str] = Field(default="", max_length=100000)  # ~100KB limit
+
+    @validator("title")
+    def validate_title(cls, v):
+        if v:
+            return sanitize_text_input(v, max_length=255)
+        return v
+
+    @validator("content")
+    def validate_content(cls, v):
+        if v:
+            return sanitize_text_input(v, max_length=100000)
+        return v
 
 
 class DocumentUpdate(BaseModel):
-    title: Optional[str] = None
-    content: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=255)
+    content: Optional[str] = Field(None, max_length=100000)
+
+    @validator("title")
+    def validate_title(cls, v):
+        if v:
+            return sanitize_text_input(v, max_length=255)
+        return v
+
+    @validator("content")
+    def validate_content(cls, v):
+        if v:
+            return sanitize_text_input(v, max_length=100000)
+        return v
 
 
 class DocumentResponse(BaseModel):
@@ -41,23 +68,37 @@ class DocumentListResponse(BaseModel):
 
 
 @router.get("/", response_model=list[DocumentListResponse])
-async def list_documents(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def list_documents(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(
         select(Document)
-        .where(and_(Document.user_id == current_user.id, Document.is_deleted.is_(False)))
+        .where(
+            and_(Document.user_id == current_user.id, Document.is_deleted.is_(False))
+        )
         .order_by(desc(Document.updated_at))
     )
     documents = result.scalars().all()
 
     return [
-        DocumentListResponse(id=doc.id, title=doc.title, word_count=doc.word_count, updated_at=doc.updated_at)
+        DocumentListResponse(
+            id=doc.id,
+            title=doc.title,
+            word_count=doc.word_count,
+            updated_at=doc.updated_at,
+        )
         for doc in documents
     ]
 
 
-@router.post("/", response_model=DocumentResponse)
+@router.post(
+    "/", response_model=DocumentResponse, dependencies=[Depends(rate_limit_general)]
+)
 async def create_document(
-    document_data: DocumentCreate, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    request: Request,
+    document_data: DocumentCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     # Create document
     document = Document(
@@ -72,7 +113,10 @@ async def create_document(
 
     # Create initial version
     version = DocumentVersion(
-        document_id=document.id, version_number=1, content=document.content, word_count=document.word_count
+        document_id=document.id,
+        version_number=1,
+        content=document.content,
+        word_count=document.word_count,
     )
     db.add(version)
     await db.commit()
@@ -89,17 +133,25 @@ async def create_document(
 
 @router.get("/{document_id}", response_model=DocumentResponse)
 async def get_document(
-    document_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    document_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
         select(Document).where(
-            and_(Document.id == document_id, Document.user_id == current_user.id, Document.is_deleted.is_(False))
+            and_(
+                Document.id == document_id,
+                Document.user_id == current_user.id,
+                Document.is_deleted.is_(False),
+            )
         )
     )
     document = result.scalar_one_or_none()
 
     if not document:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
+        )
 
     return DocumentResponse(
         id=document.id,
@@ -121,23 +173,40 @@ async def update_document(
     # Get document
     result = await db.execute(
         select(Document).where(
-            and_(Document.id == document_id, Document.user_id == current_user.id, Document.is_deleted.is_(False))
+            and_(
+                Document.id == document_id,
+                Document.user_id == current_user.id,
+                Document.is_deleted.is_(False),
+            )
         )
     )
     document = result.scalar_one_or_none()
 
     if not document:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
+        )
 
-    # Update fields
+    # Build update dictionary
+    updates = {}
     if document_update.title is not None:
-        document.title = document_update.title
+        updates["title"] = document_update.title
 
     if document_update.content is not None:
-        document.content = document_update.content
-        document.word_count = len(document_update.content.split())
+        updates["content"] = document_update.content
+        updates["word_count"] = len(document_update.content.split())
 
-        # Create new version
+    # Apply updates using immutable pattern (creates new instance)
+    updated_document = update_with_audit(document, updates)
+
+    # Since SQLAlchemy requires updating the existing instance,
+    # we copy the values from the new instance to the tracked one
+    for key, value in updates.items():
+        setattr(document, key, value)
+    document.updated_at = updated_document.updated_at
+
+    # Create new version if content changed
+    if "content" in updates:
         result = await db.execute(
             select(DocumentVersion)
             .where(DocumentVersion.document_id == document_id)
@@ -154,7 +223,6 @@ async def update_document(
         )
         db.add(new_version)
 
-    document.updated_at = datetime.utcnow()
     await db.commit()
     await db.refresh(document)
 
@@ -170,20 +238,33 @@ async def update_document(
 
 @router.delete("/{document_id}")
 async def delete_document(
-    document_id: str, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    document_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
         select(Document).where(
-            and_(Document.id == document_id, Document.user_id == current_user.id, Document.is_deleted.is_(False))
+            and_(
+                Document.id == document_id,
+                Document.user_id == current_user.id,
+                Document.is_deleted.is_(False),
+            )
         )
     )
     document = result.scalar_one_or_none()
 
     if not document:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
+        )
 
-    # Soft delete
-    document.is_deleted = True
+    # Soft delete using immutable pattern
+    deleted_document = update_with_audit(document, {"is_deleted": True})
+
+    # Apply the change to the tracked instance
+    document.is_deleted = deleted_document.is_deleted
+    document.updated_at = deleted_document.updated_at
+
     await db.commit()
 
     return {"message": "Document deleted successfully"}

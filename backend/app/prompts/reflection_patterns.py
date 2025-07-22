@@ -5,9 +5,21 @@ Used to assess student readiness for AI assistance.
 
 # Linguistic indicators of quality reflection
 DEPTH_INDICATORS = {
-    "surface_level": ["I need help", "I don't know", "This is hard", "I'm stuck", "Can you help"],
+    "surface_level": [
+        "I need help",
+        "I don't know",
+        "This is hard",
+        "I'm stuck",
+        "Can you help",
+    ],
     "developing": ["I think", "Maybe", "It seems", "I'm trying to", "I want to"],
-    "thoughtful": ["I'm considering", "The challenge is", "I've noticed that", "My approach is", "I'm exploring"],
+    "thoughtful": [
+        "I'm considering",
+        "The challenge is",
+        "I've noticed that",
+        "My approach is",
+        "I'm exploring",
+    ],
     "sophisticated": [
         "Upon reflection",
         "I've analyzed",
@@ -20,14 +32,29 @@ DEPTH_INDICATORS = {
 SELF_AWARENESS_PATTERNS = {
     "low": ["I don't understand", "This doesn't make sense", "Why is this so hard"],
     "moderate": ["I'm struggling with", "I need to work on", "My weakness is"],
-    "high": ["I recognize that I", "My tendency is to", "I'm aware that my", "I've noticed I often"],
+    "high": [
+        "I recognize that I",
+        "My tendency is to",
+        "I'm aware that my",
+        "I've noticed I often",
+    ],
 }
 
 CRITICAL_THINKING_MARKERS = {
     "questioning": ["What if", "How might", "Could it be", "Why does", "What causes"],
-    "analyzing": ["This connects to", "The relationship between", "This implies", "This suggests", "This demonstrates"],
+    "analyzing": [
+        "This connects to",
+        "The relationship between",
+        "This implies",
+        "This suggests",
+        "This demonstrates",
+    ],
     "evaluating": [
-        "The strength of", "The weakness in", "This assumes", "The evidence shows", "This contradicts"
+        "The strength of",
+        "The weakness in",
+        "This assumes",
+        "The evidence shows",
+        "This contradicts",
     ],
     "synthesizing": [
         "Bringing together",
@@ -39,8 +66,19 @@ CRITICAL_THINKING_MARKERS = {
 }
 
 GROWTH_MINDSET_INDICATORS = {
-    "fixed": ["I can't", "I'm not good at", "This is too hard", "I give up", "I'll never understand"],
-    "mixed": ["This is difficult but", "I haven't figured out yet", "I need more practice", "I'm working on"],
+    "fixed": [
+        "I can't",
+        "I'm not good at",
+        "This is too hard",
+        "I give up",
+        "I'll never understand",
+    ],
+    "mixed": [
+        "This is difficult but",
+        "I haven't figured out yet",
+        "I need more practice",
+        "I'm working on",
+    ],
     "growth": [
         "I'm learning to",
         "I can improve by",
@@ -57,7 +95,12 @@ def calculate_reflection_dimensions(reflection_text: str) -> dict:
     Returns scores for depth, self-awareness, critical thinking, and growth mindset.
     """
     text_lower = reflection_text.lower()
-    scores = {"depth": 0, "self_awareness": 0, "critical_thinking": 0, "growth_mindset": 0}
+    scores = {
+        "depth": 0,
+        "self_awareness": 0,
+        "critical_thinking": 0,
+        "growth_mindset": 0,
+    }
 
     # Calculate depth score
     if any(indicator in text_lower for indicator in DEPTH_INDICATORS["sophisticated"]):
@@ -85,9 +128,13 @@ def calculate_reflection_dimensions(reflection_text: str) -> dict:
     scores["critical_thinking"] = min(ct_score, 4)
 
     # Calculate growth mindset
-    if any(indicator in text_lower for indicator in GROWTH_MINDSET_INDICATORS["growth"]):
+    if any(
+        indicator in text_lower for indicator in GROWTH_MINDSET_INDICATORS["growth"]
+    ):
         scores["growth_mindset"] = 3
-    elif any(indicator in text_lower for indicator in GROWTH_MINDSET_INDICATORS["mixed"]):
+    elif any(
+        indicator in text_lower for indicator in GROWTH_MINDSET_INDICATORS["mixed"]
+    ):
         scores["growth_mindset"] = 2
     else:
         scores["growth_mindset"] = 1

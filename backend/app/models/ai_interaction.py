@@ -1,10 +1,15 @@
 import uuid
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.sql import func
 
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.document import Document
+    from app.models.user import User
 
 
 class Reflection(Base):
@@ -20,8 +25,13 @@ class Reflection(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
-    user = relationship("User", back_populates="reflections")
-    document = relationship("Document", back_populates="reflections")
+    user: Mapped["User"] = relationship("User", back_populates="reflections")
+    document: Mapped["Document"] = relationship(
+        "Document", back_populates="reflections"
+    )
+    ai_interactions: Mapped[list["AIInteraction"]] = relationship(
+        "AIInteraction", back_populates="reflection"
+    )
 
 
 class AIInteraction(Base):
@@ -44,5 +54,10 @@ class AIInteraction(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
-    user = relationship("User", back_populates="ai_interactions")
-    document = relationship("Document", back_populates="ai_interactions")
+    user: Mapped["User"] = relationship("User", back_populates="ai_interactions")
+    document: Mapped["Document"] = relationship(
+        "Document", back_populates="ai_interactions"
+    )
+    reflection: Mapped[Optional["Reflection"]] = relationship(
+        "Reflection", back_populates="ai_interactions"
+    )

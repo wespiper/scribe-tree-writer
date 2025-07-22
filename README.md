@@ -1,101 +1,144 @@
 # Scribe Tree Writer
 
-> An AI writing partner that enhances thinking through Socratic questioning
+An AI writing partner that enhances student thinking through Socratic questioning.
 
-## Vision
+## What is Scribe Tree Writer?
 
-Scribe Tree Writer demonstrates how AI should work in education—not as a shortcut that bypasses thinking, but as a partner that deepens it. Through carefully designed friction and progressive enhancement, students develop stronger writing and critical thinking skills while learning to collaborate effectively with AI.
-
-## Core Philosophy
-
--   **Questions, Not Answers**: AI guides through inquiry rather than providing solutions
--   **Productive Friction**: Strategic challenges that build capability
--   **Progressive Enhancement**: Better thinking unlocks more sophisticated AI assistance
--   **Transparency**: All AI interactions are visible and educational
-
-## Technical Stack
-
-### Backend (Python)
-
--   **Framework**: FastAPI with async support
--   **Database**: PostgreSQL with SQLAlchemy ORM
--   **AI Integration**: OpenAI/Anthropic APIs
--   **Authentication**: JWT with secure password hashing
--   **Analytics**: Custom learning metrics tracking
-
-### Frontend (React)
-
--   **Framework**: React 18 with TypeScript
--   **Styling**: Tailwind CSS + ShadCN UI
--   **Editor**: Tiptap for rich text editing
--   **State Management**: React Context + hooks
--   **Build Tool**: Vite for fast development
+Scribe Tree Writer is an educational platform that uses AI differently. Instead of generating content for students, it asks thoughtful questions that guide them to develop their own ideas. The system requires students to reflect on their thinking before accessing AI assistance, promoting genuine learning over task completion.
 
 ## Key Features
 
-1. **Reflection Gates**: Students must reflect before accessing AI assistance
-2. **Socratic AI**: Responds with thoughtful questions, not direct answers
-3. **Progressive Levels**: AI sophistication increases with reflection quality
-4. **Learning Analytics**: Track thinking development over time
-5. **Version History**: See how writing and thinking evolve
+- **Reflection Gates**: Students write reflections before accessing AI help
+- **Socratic AI**: Responds with questions, not answers
+- **Progressive Assistance**: Better reflections unlock more sophisticated questions
+- **Learning Analytics**: Track thinking development over time
+- **Version History**: See how documents evolve
+- **Export Options**: Download work in CSV, JSON, or PDF formats
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
--   Python 3.11+
--   Node.js 18+
--   PostgreSQL 14+
+- Python 3.9+
+- Node.js 18+
+- PostgreSQL 14+
+- Git
 
-### Backend Setup
+### Installation
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/yourusername/scribe-tree-writer.git
+cd scribe-tree-writer
+```
+
+2. Set up the backend
 
 ```bash
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
+```
+
+3. Configure environment variables
+
+```bash
 cp .env.example .env
-# Edit .env with your database and API keys
+# Edit .env with your settings:
+# - DATABASE_URL (PostgreSQL connection string)
+# - OPENAI_API_KEY and/or ANTHROPIC_API_KEY
+# - SECRET_KEY (generate a secure random string)
+```
+
+4. Initialize the database
+
+```bash
 alembic upgrade head
+```
+
+5. Start the backend server
+
+```bash
 uvicorn app.main:app --reload
 ```
 
-### Frontend Setup
+6. In a new terminal, set up the frontend
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env
-# Edit .env with API endpoint
+```
+
+7. Start the frontend development server
+
+```bash
 npm run dev
 ```
+
+8. Open http://localhost:5173 in your browser
 
 ## Project Structure
 
 ```
 scribe-tree-writer/
-├── backend/                 # Python FastAPI backend
+├── backend/
 │   ├── app/
-│   │   ├── api/            # API endpoints
-│   │   ├── models/         # SQLAlchemy models
-│   │   ├── services/       # Business logic
-│   │   ├── core/           # Core utilities
-│   │   └── prompts/        # AI prompt templates
-│   └── tests/              # Backend tests
-├── frontend/               # React frontend
+│   │   ├── api/         # API endpoints
+│   │   ├── models/      # Database models
+│   │   ├── services/    # Business logic
+│   │   └── prompts/     # AI configuration
+│   └── tests/           # Backend tests
+├── frontend/
 │   ├── src/
-│   │   ├── components/     # React components
-│   │   ├── pages/          # Page components
-│   │   ├── services/       # API clients
-│   │   └── hooks/          # Custom React hooks
-│   └── public/             # Static assets
-└── docs/                   # Documentation
+│   │   ├── components/  # React components
+│   │   ├── pages/       # Page components
+│   │   └── services/    # API clients
+│   └── tests/           # Frontend tests
+└── docs/               # Documentation
 ```
 
-## Development Philosophy
+## Documentation
 
-This project embodies the belief that AI should enhance human capabilities, not replace them. Every design decision prioritizes learning outcomes over convenience, ensuring students develop the critical thinking skills they'll need in an AI-integrated future.
+- [Getting Started Guide](docs/getting-started.md)
+- [User Guide](docs/user-guide.md)
+- [API Reference](docs/api-reference.md)
+- [Deployment Guide](backend/docs/deployment.md)
+- [Educational Philosophy](docs/PHILOSOPHY.md)
+
+## Running Tests
+
+Backend tests:
+
+```bash
+cd backend
+./run_tests.sh
+```
+
+Frontend tests:
+
+```bash
+cd frontend
+npm test
+```
+
+## Development
+
+The project uses pre-commit hooks to maintain code quality. Install them with:
+
+```bash
+pre-commit install
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Write tests for new functionality
+4. Ensure all tests pass
+5. Submit a pull request
 
 ## License
 
-MIT License - See LICENSE file for details
+MIT License - see LICENSE file for details.

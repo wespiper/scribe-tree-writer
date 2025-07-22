@@ -10,9 +10,9 @@ from app.main import app
 from app.models.user import User
 
 # Test database URL - use environment variable or default
-TEST_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost/scribe_test").replace(
-    "postgresql://", "postgresql+asyncpg://"
-)
+TEST_DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost/scribe_test"
+).replace("postgresql://", "postgresql+asyncpg://")
 
 
 @pytest_asyncio.fixture
@@ -36,7 +36,9 @@ async def test_db_engine():
 @pytest_asyncio.fixture
 async def db_session(test_db_engine) -> AsyncGenerator[AsyncSession, None]:
     """Get test database session with automatic rollback"""
-    async_session_maker = async_sessionmaker(test_db_engine, class_=AsyncSession, expire_on_commit=False)
+    async_session_maker = async_sessionmaker(
+        test_db_engine, class_=AsyncSession, expire_on_commit=False
+    )
 
     async with async_session_maker() as session:
         yield session
@@ -61,10 +63,16 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest_asyncio.fixture
-async def authenticated_client(client: AsyncClient) -> AsyncGenerator[AsyncClient, None]:
+async def authenticated_client(
+    client: AsyncClient,
+) -> AsyncGenerator[AsyncClient, None]:
     """Get authenticated test client"""
     # Create a test user
-    user_data = {"email": "test@example.com", "password": "testpass123", "full_name": "Test User"}
+    user_data = {
+        "email": "test@example.com",
+        "password": "testpass123",
+        "full_name": "Test User",
+    }
 
     # Register user
     response = await client.post("/api/auth/register", json=user_data)
@@ -88,11 +96,11 @@ async def test_user(db_session: AsyncSession) -> User:
     """Create a test user in the database"""
     from app.core.security import get_password_hash
     from app.models.user import User
-    
+
     user = User(
         email="test@example.com",
         hashed_password=get_password_hash("testpass123"),
-        full_name="Test User"
+        full_name="Test User",
     )
     db_session.add(user)
     await db_session.commit()
