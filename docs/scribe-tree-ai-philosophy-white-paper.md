@@ -345,9 +345,6 @@ Scribe Tree ensures AI amplifies rather than replaces human intelligence. Studen
 That's the future education needs. That's the future Scribe Tree delivers.
 
 ---
-
-_For more information about Scribe Tree's Bounded Enhancement for Learning approach, research validation, or pilot program opportunities, contact [contact information]._
-
 **Document Version**: 2.0
 **Date**: June 2025
 **Authors**: Wes Piper
